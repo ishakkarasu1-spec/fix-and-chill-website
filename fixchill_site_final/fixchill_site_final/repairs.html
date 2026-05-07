@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -17,7 +17,7 @@
   <meta property="og:url" content="https://www.fixandchill.com/repairs.html">
   <meta property="og:image" content="https://www.fixandchill.com/assets/img/fixchill-logo.png">
   <link rel="icon" href="assets/img/fixchill-logo.png">
-  <link rel="stylesheet" href="assets/css/style.css?v=20260506-serving-plus">
+  <link rel="stylesheet" href="assets/css/style.css?v=20260507-booking-space">
   <script defer src="assets/js/app.js"></script>
   <script type="application/ld+json">
   {
@@ -69,11 +69,58 @@
         <a class="social-link facebook" href="https://www.facebook.com/share/15hH6Arcbn8/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" aria-label="Fix&Chill Facebook page"><span>f</span></a>
         <a class="social-link instagram" href="https://www.instagram.com/fixandchill2?igsh=czBoOG51YjZkeXlr&amp;utm_source=qr" target="_blank" rel="noopener noreferrer" aria-label="Fix&Chill Instagram page"><span>IG</span></a>
         <a class="social-link tiktok" href="https://www.tiktok.com/@fixchillrehobothbeach?_r=1&amp;_t=ZP-968byyi4zZG" target="_blank" rel="noopener noreferrer" aria-label="Fix&Chill TikTok page"><span>TT</span></a>
-        <a class="social-link youtube" href="https://youtube.com/@fixandchillrehoboth?si=Y4QC3N38l9z2fQoQ" target="_blank" rel="noopener noreferrer" aria-label="Fix&Chill YouTube channel"><span>▶</span></a>
+        <a class="social-link youtube" href="https://youtube.com/@fixandchillrehoboth?si=Y4QC3N38l9z2fQoQ" target="_blank" rel="noopener noreferrer" aria-label="Fix&Chill YouTube channel"><span>?</span></a>
       </div>
     </div>
   </nav>
 </header>
+
+<section id="book-repair" class="section container booking-section">
+  <h2>Book Repair</h2>
+  <p class="booking-intro">Tell us your device, the issue, and the day and time that works best for you.</p>
+  <form class="form booking-form" action="https://formsubmit.co/fixandchill1@gmail.com" method="POST">
+    <input type="hidden" name="_subject" value="Fix and Chill repair booking request">
+    <input type="hidden" name="_template" value="table">
+    <input type="hidden" name="_captcha" value="false">
+    <label>Make
+      <input name="make" placeholder="e.g., Apple, Samsung, Google" required>
+    </label>
+    <label>Model
+      <input name="model" placeholder="e.g., iPhone 14 Pro, Galaxy S23, iPad Air" required>
+    </label>
+    <label>Problem / Repair Needed
+      <select name="problem" required>
+        <option value="">Select problem</option>
+        <option>Cracked screen</option>
+        <option>Battery replacement</option>
+        <option>Charging port issue</option>
+        <option>Tablet screen replacement</option>
+        <option>Water damage</option>
+        <option>Not turning on</option>
+        <option>Other repair</option>
+      </select>
+    </label>
+    <label>What day are you available?
+      <input type="date" name="preferred_day" required>
+    </label>
+    <label>What time are you available?
+      <input type="time" name="preferred_time" required>
+    </label>
+    <label>Your Name
+      <input name="name" required>
+    </label>
+    <label>Phone Number
+      <input name="phone" required>
+    </label>
+    <label>Email
+      <input type="email" name="email" placeholder="customer@email.com" required>
+    </label>
+    <label>Service Location / Notes
+      <textarea name="location_notes" rows="4" placeholder="City, address or general area. Add anything we should know."></textarea>
+    </label>
+    <button class="btn btn-accent" type="submit">Submit Repair Booking</button>
+  </form>
+</section>
 
 <section class="container">
   <h1>We Come To You - Rehoboth Beach, Lewes, Laurel, Salisbury, Ocean City, Ocean View & Eastern Shore</h1>
@@ -93,7 +140,7 @@
   <p>Screen, battery & charging port repairs. <strong>MacBook parts arrive in 1-2 days.</strong> For other laptop brands, contact us for availability and ETA.</p>
 
   <div class="cta-row">
-    <a class="btn btn-accent" href="tel:+13027273842">Call to Book</a>
+    <a class="btn btn-accent" href="#book-repair">Book Repair</a>
     <a class="btn" href="contact.html" target="_blank" rel="noopener noreferrer">Message Us</a>
   </div>
 </section>

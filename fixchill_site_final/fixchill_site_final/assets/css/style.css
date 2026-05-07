@@ -37,6 +37,12 @@ img{max-width:100%;height:auto;display:block}
 .tags li{padding:6px 10px;border-radius:999px;background:#fff;border:1px solid #e5e7eb}
 .form{display:grid;gap:12px;max-width:640px}
 .form input,.form select,.form textarea{width:100%;padding:10px;border-radius:10px;border:1px solid #e5e7eb;background:#fff}
+.booking-section{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:28px;box-shadow:0 10px 24px rgba(0,0,0,.05);scroll-margin-top:190px}
+.section.booking-section{padding:46px 44px}
+.booking-section h2{margin-top:0}
+.booking-intro{margin-top:-6px;color:var(--muted)}
+.booking-form{max-width:840px;grid-template-columns:1fr}
+@media(min-width:760px){.booking-form{grid-template-columns:1fr 1fr}.booking-form label:last-of-type,.booking-form button{grid-column:1 / -1}}
 .cta-row{display:flex;gap:10px;flex-wrap:wrap}
 .contact-grid{display:grid;gap:16px;grid-template-columns:1fr}
 @media(min-width:768px){.contact-grid{grid-template-columns:1fr 1fr}}
@@ -170,19 +176,18 @@ body{background:var(--bg);color:var(--ink)}
 @media(max-width:768px){
   body{font-size:15px}
   .container{padding-left:22px;padding-right:22px}
-  .nav{align-items:flex-start;flex-wrap:wrap;gap:7px;min-height:auto;padding-top:6px;padding-bottom:6px}
-  .nav nav{display:flex;flex-wrap:wrap;gap:8px;width:100%}
+  .nav{align-items:center;flex-wrap:wrap;gap:3px;min-height:auto;padding-top:3px;padding-bottom:3px}
+  .nav nav{display:flex;flex-wrap:wrap;gap:3px;width:100%;line-height:1.1}
   .nav a{margin-left:0}
-  .nav nav a{font-size:15px;padding:8px 10px}
-  .nav nav .btn{padding:8px 11px}
+  .nav nav a{font-size:12px;padding:3px 5px}
+  .nav nav .btn{padding:5px 8px;border-radius:9px}
   .nav-contact{align-items:flex-start;margin-left:0}
-  .nav-social{margin-top:6px}
-  .nav-social .social-link{width:24px;height:24px}
-  .logo.logo-wide{--logo-width:260px}
+  .nav-social{display:none}
+  .logo.logo-wide{--logo-width:170px}
   .logo.logo-wide img{width:100%!important;max-width:100%;max-height:none}
   .logo-city-line{font-size:12px;max-width:320px}
   .logo-service-line{font-size:14px;max-width:none}
-  .nav-service-line{position:static;transform:none;order:2;width:auto;max-width:230px;margin:0 auto}
+  .nav-service-line{display:none}
   .nav nav{order:3}
   .topbar{position:static;flex-direction:column;align-items:center;gap:2px;text-align:center}
   .hero-img img{height:620px}
@@ -196,6 +201,7 @@ body{background:var(--bg);color:var(--ink)}
   .mini-quote input,.mini-quote select,.mini-quote button{width:100%}
   .two-col,.two-col.reverse,.contact-block{grid-template-columns:1fr}
   .section{padding:34px 0}
+  .section.booking-section{padding:34px 24px}
   .two-col .media{order:2}
   .two-col .text{order:1}
   .two-col .media img{border-radius:14px}
@@ -209,10 +215,11 @@ body{background:var(--bg);color:var(--ink)}
 
 @media(max-width:430px){
   .container{padding-left:24px;padding-right:24px}
-  .logo.logo-wide{--logo-width:245px}
+  .section.booking-section{padding:30px 20px}
+  .logo.logo-wide{--logo-width:160px}
   .logo.logo-wide img{width:100%!important;max-height:none}
   .logo-city-line,.logo-service-line{max-width:none}
-  .logo-service-line{font-size:13px}
+  .logo-service-line{font-size:12px}
   .hero-img img{height:700px}
   .hero-overlay h1{font-size:24px}
   .hero-kicker{font-size:14px}
