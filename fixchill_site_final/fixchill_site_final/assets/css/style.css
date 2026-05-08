@@ -43,6 +43,12 @@ img{max-width:100%;height:auto;display:block}
 .booking-intro{margin-top:-6px;color:var(--muted)}
 .booking-form{max-width:840px;grid-template-columns:1fr}
 @media(min-width:760px){.booking-form{grid-template-columns:1fr 1fr}.booking-form label:last-of-type,.booking-form button{grid-column:1 / -1}}
+.book-main{padding:22px 0 48px}
+.book-page-section{margin-top:18px;margin-bottom:32px}
+.book-page-section .booking-form{margin-top:18px}
+.book-page-section h1{margin:6px 0 10px;font-size:42px;line-height:1.15}
+.book-page .booking-intro{max-width:760px}
+.book-nav{position:relative}
 .cta-row{display:flex;gap:10px;flex-wrap:wrap}
 .contact-grid{display:grid;gap:16px;grid-template-columns:1fr}
 @media(min-width:768px){.contact-grid{grid-template-columns:1fr 1fr}}
@@ -176,18 +182,18 @@ body{background:var(--bg);color:var(--ink)}
 @media(max-width:768px){
   body{font-size:15px}
   .container{padding-left:22px;padding-right:22px}
-  .nav{align-items:center;flex-wrap:wrap;gap:3px;min-height:auto;padding-top:3px;padding-bottom:3px}
-  .nav nav{display:flex;flex-wrap:wrap;gap:3px;width:100%;line-height:1.1}
+  .nav{align-items:center;justify-content:center;text-align:center;flex-wrap:wrap;gap:2px;min-height:auto;padding-top:3px;padding-bottom:3px}
+  .nav nav{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:3px;width:100%;line-height:1.1}
   .nav a{margin-left:0}
-  .nav nav a{font-size:12px;padding:3px 5px}
+  .nav nav a{font-size:12px;padding:2px 5px}
   .nav nav .btn{padding:5px 8px;border-radius:9px}
-  .nav-contact{align-items:flex-start;margin-left:0}
+  .nav-contact{align-items:center;margin-left:0}
   .nav-social{display:none}
-  .logo.logo-wide{--logo-width:170px}
+  .logo.logo-wide{--logo-width:170px;margin-left:auto;margin-right:auto;order:1}
   .logo.logo-wide img{width:100%!important;max-width:100%;max-height:none}
   .logo-city-line{font-size:12px;max-width:320px}
   .logo-service-line{font-size:14px;max-width:none}
-  .nav-service-line{display:none}
+  .nav-service-line{display:block;position:static;transform:none;order:2;margin:1px auto 0;width:auto;max-width:270px;font-size:11px;line-height:1;padding:3px 7px;white-space:normal}
   .nav nav{order:3}
   .topbar{position:static;flex-direction:column;align-items:center;gap:2px;text-align:center}
   .hero-img img{height:620px}
@@ -202,6 +208,10 @@ body{background:var(--bg);color:var(--ink)}
   .two-col,.two-col.reverse,.contact-block{grid-template-columns:1fr}
   .section{padding:34px 0}
   .section.booking-section{padding:34px 24px}
+  .book-main{padding:14px 0 36px}
+  .book-page-section{margin:14px 16px 28px}
+  .book-page-section h1{font-size:32px}
+  .book-page .booking-intro{font-size:16px;line-height:1.55}
   .two-col .media{order:2}
   .two-col .text{order:1}
   .two-col .media img{border-radius:14px}
@@ -216,9 +226,13 @@ body{background:var(--bg);color:var(--ink)}
 @media(max-width:430px){
   .container{padding-left:24px;padding-right:24px}
   .section.booking-section{padding:30px 20px}
-  .logo.logo-wide{--logo-width:160px}
+  .book-page-section{margin-left:14px;margin-right:14px}
+  .book-page-section h1{font-size:29px}
+  .book-page .form input,.book-page .form select,.book-page .form textarea{padding:13px 12px;font-size:16px}
+  .logo.logo-wide{--logo-width:165px}
   .logo.logo-wide img{width:100%!important;max-height:none}
   .logo-city-line,.logo-service-line{max-width:none}
+  .nav-service-line{max-width:250px;font-size:10px;padding:3px 6px}
   .logo-service-line{font-size:12px}
   .hero-img img{height:700px}
   .hero-overlay h1{font-size:24px}

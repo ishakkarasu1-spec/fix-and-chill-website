@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://www.fixandchill.com/sitemap.xml
+Sitemap: https://www.fixandchillphonerepair.com/sitemap.xml
