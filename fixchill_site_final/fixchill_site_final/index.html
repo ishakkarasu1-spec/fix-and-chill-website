@@ -17,7 +17,7 @@
   <meta property="og:image" content="https://www.fixandchillphonerepair.com/assets/img/fixchill-logo.png">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" href="assets/img/fixchill-logo.png">
-  <link rel="stylesheet" href="assets/css/style.css?v=20260507-mobile-header-center">
+  <link rel="stylesheet" href="assets/css/style.css?v=20260514-netlify-visitor-fix">
   <script defer src="assets/js/app.js"></script>
 </head>
 <body>
@@ -44,7 +44,7 @@
 </header>
 
 <div class="topbar">
-  <span>Same-day repair & buyback in Rehoboth Beach</span>
+  <span>Same-day repair & buyback</span>
   <a href="tel:+13027273842" class="topbar-call">Call (302) 727-3842</a>
 
   </div>
@@ -60,14 +60,13 @@
     <p>iPhone &bull; Samsung &bull; iPad &bull; Google Pixel &bull; MacBook/Laptop &bull; Game Console</p>
     <div class="hero-cta">
       <a class="btn btn-accent" href="sell.html" target="_blank" rel="noopener noreferrer">Get a Buyback Quote</a>
-      <a class="btn" href="book-repair.html">Book Repair</a>
+      <a class="btn" href="book-repair.html" target="_blank" rel="noopener noreferrer">Book Repair</a>
       <a class="btn btn-ghost" href="tel:+13027273842">Call (302) 727-3842</a>
     
     
-    <form class="mini-quote" action="https://formsubmit.co/fixandchill1@gmail.com" method="POST">
-      <input type="hidden" name="_subject" value="Fix and Chill instant quote request">
-      <input type="hidden" name="_template" value="table">
-      <input type="hidden" name="_captcha" value="false">
+    <form class="mini-quote" name="instant-quote" action="/thank-you.html" method="POST" data-netlify="true" netlify-honeypot="bot-field">
+      <input type="hidden" name="form-name" value="instant-quote">
+      <p class="hidden"><label>Do not fill this out: <input name="bot-field"></label></p>
       <div class="grid">
         <select name="type" required>
           <option value="">Device type</option>
@@ -103,10 +102,9 @@
 <section id="book-repair" class="section container booking-section">
   <h2>Book Repair</h2>
   <p class="booking-intro">Tell us your device, the issue, and the day and time that works best for you.</p>
-  <form class="form booking-form" action="https://formsubmit.co/fixandchill1@gmail.com" method="POST">
-    <input type="hidden" name="_subject" value="Fix and Chill repair booking request">
-    <input type="hidden" name="_template" value="table">
-    <input type="hidden" name="_captcha" value="false">
+  <form class="form booking-form" name="repair-booking" action="/thank-you.html" method="POST" data-netlify="true" netlify-honeypot="bot-field">
+    <input type="hidden" name="form-name" value="repair-booking">
+    <p class="hidden"><label>Do not fill this out: <input name="bot-field"></label></p>
     <label>Make
       <input name="make" placeholder="e.g., Apple, Samsung, Google" required>
     </label>
@@ -141,7 +139,7 @@
       <input type="email" name="email" placeholder="customer@email.com" required>
     </label>
     <label>Service Location / Notes
-      <textarea name="location_notes" rows="4" placeholder="City, address or general area. Add anything we should know."></textarea>
+      <textarea name="location_notes" rows="4" placeholder="City, address or general area. Add anything we should know." required></textarea>
     </label>
     <button class="btn btn-accent" type="submit">Submit Repair Booking</button>
   </form>
@@ -165,7 +163,7 @@
     <p><strong>Screen repair</strong>, <strong>cracked screen repair</strong>, <strong>iPhone screen repair</strong>, <strong>Samsung screen repair</strong>, <strong>iPad screen repair</strong>; battery replacement, charging port repair and camera replacement. Most iPhone parts are <strong>in stock</strong> for <strong>same-day</strong> service. <strong>6-month warranty</strong> on repairs. Genuine Apple replacement parts can be ordered within <strong>1-2 business days</strong>.</p>
     <p class="service-note">We Come To You</p>
     <div class="cta-row">
-      <a class="btn btn-accent" href="book-repair.html">Book Now</a>
+      <a class="btn btn-accent" href="book-repair.html" target="_blank" rel="noopener noreferrer">Book Now</a>
       <a class="btn" href="tel:+13027273842">Call (302) 727-3842</a>
     </div>
   </div>
@@ -245,15 +243,21 @@
 
 <section id="reviews" class="section container">
   <h2>What customers say</h2>
+  <div class="review-video">
+    <video controls preload="metadata">
+      <source src="assets/video/customer-review.mp4" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>
+  </div>
   <div class="reviews-grid">
     <blockquote class="review">
-      <p>&quot;Same-day iPhone screen repair. In and out in under an hour!&quot;</p><cite>- Local Customer</cite>
+      <p>&quot;Isaac provided AMAZING SERVICE! Great quality, price and overall experience. Would definitely recommend!!!&quot;</p><cite>- Joe Stong</cite>
     </blockquote>
     <blockquote class="review">
-      <p>&quot;Fair cash offer for my cracked Galaxy. Friendly staff.&quot;</p><cite>- Rehoboth Beach</cite>
+      <p>&quot;Amazing service!! I brought my iPhone in after it had been run over by a truck - the front camera was broken and the back screen was completely shattered. He fixed everything perfectly in just a day and a half. Super affordable and honestly one of the nicest people I've ever met. Highly recommend!!&quot;</p><cite>- Google Customer</cite>
     </blockquote>
     <blockquote class="review">
-      <p>&quot;They sourced a MacBook battery in 2 days and installed it fast.&quot;</p><cite>- Eastern Shore</cite>
+      <p>&quot;We were on vacation and Isaac fixed our phone in a jam. His prices are fair and the repair process was very fast. I would recommend him to everyone I know. Please come see him! Great service!&quot;</p><cite>- Edward Heymann</cite>
     </blockquote>
   </div>
   <p><a class="btn" target="_blank" rel="noopener noreferrer"
@@ -337,6 +341,15 @@
 <a class="fab fab-wa" href="https://wa.me/13027273842" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp 3027273842">WA</a>
 
 
+<form name="visitor-notification" method="POST" data-netlify="true" netlify-honeypot="bot-field" hidden>
+  <input type="hidden" name="form-name" value="visitor-notification">
+  <input name="bot-field">
+  <input name="page_url">
+  <input name="page_title">
+  <input name="referrer">
+  <input name="visitor_time">
+  <input name="user_agent">
+</form>
 <iframe class="notify-frame" name="visitor-notify-frame" title="Visitor notification"></iframe>
 
 <script type="application/ld+json">
