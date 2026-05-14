@@ -13,24 +13,3 @@ document.addEventListener('click', function(e){
     window.location.href = url;
   }
 });
-
-// Sends a one-time notification when a visitor stays longer than 5 seconds.
-// Netlify records this as a Forms submission.
-(function(){
-  window.setTimeout(function(){
-    const fields = {
-      'form-name': 'visitor-notification',
-      page_url: window.location.href,
-      page_title: document.title,
-      referrer: document.referrer || 'Direct / unknown',
-      visitor_time: new Date().toLocaleString(),
-      user_agent: navigator.userAgent
-    };
-
-    fetch('/', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-      body: new URLSearchParams(fields).toString()
-    }).catch(function(){});
-  }, 5000);
-})();
