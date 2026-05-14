@@ -17,13 +17,7 @@ document.addEventListener('click', function(e){
 // Sends a one-time notification when a visitor stays longer than 5 seconds.
 // Netlify records this as a Forms submission.
 (function(){
-  const storageKey = 'fixchill_visit_notice_sent';
-  if(sessionStorage.getItem(storageKey)) return;
-
   window.setTimeout(function(){
-    if(sessionStorage.getItem(storageKey)) return;
-    sessionStorage.setItem(storageKey, '1');
-
     const fields = {
       'form-name': 'visitor-notification',
       page_url: window.location.href,
