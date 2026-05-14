@@ -17,7 +17,7 @@
   <meta property="og:url" content="https://www.fixandchillphonerepair.com/accessories.html">
   <meta property="og:image" content="https://www.fixandchillphonerepair.com/assets/img/fixchill-logo.png">
   <link rel="icon" href="assets/img/fixchill-logo.png">
-  <link rel="stylesheet" href="assets/css/style.css?v=20260508-real-reviews-video">
+  <link rel="stylesheet" href="assets/css/style.css?v=20260514-netlify-visitor-fix">
   <script defer src="assets/js/app.js"></script>
   <script type="application/ld+json">
   {
@@ -51,7 +51,22 @@
   "priceRange": "$$"
 }
   </script>
-</head>
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-CQGRLGBX91"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-CQGRLGBX91');
+  </script>
+  <!-- Microsoft Clarity -->
+  <script>
+    (function(c,l,a,r,i,t,y){
+      c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+      t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+      y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "wr01neya2x");
+  </script></head>
 <body>
 <header class="container nav">
   <a class="logo logo-wide" href="index.html"><img src="assets/img/fixchill-logo.png" alt="Fix&Chill mobile phone repair logo"></a>
@@ -91,6 +106,15 @@
   </address>
   <p>&copy; Fix&Chill - Same-day phone repair & device buyback in Rehoboth Beach & Eastern Shore.</p>
 </footer>
+<form name="visitor-notification" method="POST" data-netlify="true" netlify-honeypot="bot-field" hidden>
+  <input type="hidden" name="form-name" value="visitor-notification">
+  <input name="bot-field">
+  <input name="page_url">
+  <input name="page_title">
+  <input name="referrer">
+  <input name="visitor_time">
+  <input name="user_agent">
+</form>
 <iframe class="notify-frame" name="visitor-notify-frame" title="Visitor notification"></iframe>
 </body>
 </html>
