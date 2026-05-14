@@ -27,6 +27,13 @@ img{max-width:100%;height:auto;display:block}
 .btn-ghost{background:transparent;border:1px solid var(--primary);color:var(--primary)}
 .hero{padding:64px 16px;text-align:center}
 .hero-cta{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:12px}
+.top-collage{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:18px auto 8px}
+.collage-tile{position:relative;overflow:hidden;margin:0;border-radius:14px;aspect-ratio:4/3;background:#d9e2e5;box-shadow:0 10px 22px rgba(0,0,0,.12)}
+.collage-tile img,.collage-video{width:100%;height:100%;display:block;object-fit:cover;object-position:35% center}
+.collage-tile img[src*="mobile-service-customer"],.collage-video{object-position:35% 18%}
+.collage-tile img[src*="cracked-phone"]{object-position:35% 28%}
+.collage-tile img[src*="rehoboth-boardwalk"],.collage-tile img[src*="bethany-beach"],.collage-tile img[src*="ocean-view"]{object-position:35% center}
+.collage-video{background:#111}
 .cards{display:grid;gap:16px;grid-template-columns:1fr}
 @media(min-width:768px){.cards{grid-template-columns:repeat(3,1fr)}}
 .card{border-radius:14px;padding:18px;background:#fff;box-shadow:0 6px 18px rgba(0,0,0,.06);cursor:pointer}
@@ -87,7 +94,7 @@ img{max-width:100%;height:auto;display:block}
 .nav-social .social-link.youtube span{font-size:12px}
 
 /* Topbar */
-.topbar{position:static;background:#0E7C86;color:#fff;display:flex;justify-content:center;align-items:center;gap:16px;padding:6px 12px;text-align:center}
+.topbar{position:static;background:#0E7C86;color:#fff;display:flex;justify-content:center;align-items:center;gap:16px;padding:5px 12px;text-align:center}
 .topbar span{display:inline-block;text-align:center}
 .topbar a.topbar-call{color:#F3B340;text-decoration:none;font-weight:600}
 
@@ -197,13 +204,15 @@ body{background:var(--bg);color:var(--ink)}
   .nav nav .btn{padding:4px 7px;border-radius:8px}
   .nav-contact{align-items:center;margin-left:0}
   .nav-social{display:none}
-  .logo.logo-wide{--logo-width:158px;margin-left:auto;margin-right:auto;order:1}
+  .logo.logo-wide{--logo-width:158px;margin-left:auto;margin-right:auto;order:1;flex:0 0 100%;justify-content:center}
   .logo.logo-wide img{width:100%!important;max-width:100%;max-height:none}
   .logo-city-line{font-size:12px;max-width:320px}
   .logo-service-line{font-size:14px;max-width:none}
-  .nav-service-line{display:block;position:static;transform:none;order:2;margin:0 auto;width:auto;max-width:190px;font-size:4px;line-height:1;padding:1px 4px;white-space:normal;border-radius:3px}
+  .nav-service-line{display:block;position:static;transform:none;order:2;flex:0 0 auto;margin:0 auto;width:auto;max-width:none;font-size:8.5px;line-height:1;padding:2px 7px;white-space:nowrap;border-radius:4px;text-align:center}
   .nav nav{order:3}
-  .topbar{position:static;flex-direction:column;align-items:center;gap:2px;text-align:center}
+  .topbar{position:static;flex-direction:column;align-items:center;gap:0;text-align:center;padding:5px 10px;line-height:1.15}
+  .topbar span{font-size:16px}
+  .topbar a.topbar-call{font-size:18px}
   .hero-img img{height:420px}
   .hero-overlay{position:absolute;justify-content:flex-start;padding:22px 20px}
   .hero-overlay h1{font-size:28px;line-height:1.18}
@@ -212,6 +221,8 @@ body{background:var(--bg);color:var(--ink)}
   .hero-cta .btn{width:100%;max-width:320px;text-align:center}
   .hero-cta .btn-ghost{display:none}
   .hero-cta a[href^="tel"]{display:none!important}
+  .top-collage{grid-template-columns:repeat(2,1fr);gap:8px;margin:12px auto 6px;padding-left:12px;padding-right:12px}
+  .collage-tile{border-radius:12px;aspect-ratio:1/1}
   .mini-quote{display:none}
   .mini-quote .grid{grid-template-columns:1fr}
   .mini-quote input,.mini-quote select,.mini-quote button{width:100%}
@@ -249,11 +260,12 @@ body{background:var(--bg);color:var(--ink)}
   .logo.logo-wide{--logo-width:150px}
   .logo.logo-wide img{width:100%!important;max-height:none}
   .logo-city-line,.logo-service-line{max-width:none}
-  .nav-service-line{max-width:180px;font-size:5.2px;padding:1px 4px}
-  .logo-service-line{font-size:5.2px}
+  .nav-service-line{max-width:none;font-size:8.5px;padding:2px 7px;white-space:nowrap}
+  .logo-service-line{font-size:8.5px}
   .hero-img img{height:390px}
   .hero-overlay h1{font-size:24px}
   .hero-kicker{font-size:14px}
+  .top-collage{gap:7px;padding-left:10px;padding-right:10px}
   .brand-grid{grid-template-columns:1fr}
   .form{max-width:100%}
 }

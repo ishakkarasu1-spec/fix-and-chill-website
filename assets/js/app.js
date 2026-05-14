@@ -13,3 +13,14 @@ document.addEventListener('click', function(e){
     window.location.href = url;
   }
 });
+
+document.querySelectorAll('video[data-stop-at]').forEach(function(video){
+  const stopAt = Number(video.dataset.stopAt);
+  if(!Number.isFinite(stopAt) || stopAt <= 0) return;
+  video.addEventListener('timeupdate', function(){
+    if(video.currentTime >= stopAt){
+      video.currentTime = 0;
+      video.play().catch(function(){});
+    }
+  });
+});
