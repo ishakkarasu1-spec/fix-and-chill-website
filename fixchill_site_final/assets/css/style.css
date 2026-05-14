@@ -5,7 +5,7 @@
 }
 *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--dark);font:16px/1.6 system-ui,Segoe UI,Inter,Arial}
 img{max-width:100%;height:auto;display:block}
-.notify-frame{display:none;width:0;height:0;border:0}
+.notify-frame,.hidden{display:none;width:0;height:0;border:0}
 .container{max-width:1100px;margin:auto;padding:16px}
 .nav{position:relative;display:grid;grid-template-columns:auto minmax(260px,1fr) auto;align-items:center;gap:28px;min-height:62px;padding-top:5px;padding-bottom:5px}
 .nav.container{padding-top:5px;padding-bottom:5px}
@@ -209,6 +209,7 @@ body{background:var(--bg);color:var(--ink)}
   .hero-cta{gap:8px}
   .hero-cta .btn{width:100%;max-width:320px;text-align:center}
   .hero-cta .btn-ghost{display:none}
+  .hero-cta a[href^="tel"]{display:none!important}
   .mini-quote{display:none}
   .mini-quote .grid{grid-template-columns:1fr}
   .mini-quote input,.mini-quote select,.mini-quote button{width:100%}
@@ -216,7 +217,8 @@ body{background:var(--bg);color:var(--ink)}
   .section{padding:34px 0}
   .section.booking-section{padding:34px 24px}
   .booking-section h2{text-align:center}
-  .review-video video{max-height:338px}
+  .review-video{max-width:430px;margin:12px auto 18px}
+  .review-video video{height:237px;max-height:237px;object-fit:contain}
   .book-main{padding:14px 0 36px}
   .book-page-section{margin:14px 16px 28px}
   .book-page-section h1{font-size:32px}
@@ -230,6 +232,10 @@ body{background:var(--bg);color:var(--ink)}
   .fab{width:48px;height:48px;font-size:18px;right:10px}
   .fab-call{bottom:72px}
   .fab-wa{bottom:16px}
+  .under-condition{display:flex!important;flex-direction:column;align-items:flex-start;gap:12px;margin:4px 0 10px}
+  .under-condition .check{display:flex!important;align-items:center;justify-content:flex-start;gap:10px;width:100%;max-width:100%;font-size:16px;line-height:1.25;text-align:left}
+  .under-condition .check input{width:22px;min-width:22px;height:22px;margin:0;flex:0 0 22px}
+  .under-condition .check span{display:inline-block;max-width:calc(100% - 34px);white-space:normal}
 }
 
 @media(max-width:430px){

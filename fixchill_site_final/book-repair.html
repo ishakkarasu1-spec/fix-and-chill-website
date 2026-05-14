@@ -16,7 +16,7 @@
   <meta property="og:url" content="https://www.fixandchillphonerepair.com/book-repair.html">
   <meta property="og:image" content="https://www.fixandchillphonerepair.com/assets/img/fixchill-logo.png">
   <link rel="icon" href="assets/img/fixchill-logo.png">
-  <link rel="stylesheet" href="assets/css/style.css?v=20260514-mobile-checkbox-video">
+  <link rel="stylesheet" href="assets/css/style.css?v=20260514-netlify-forms">
   <script defer src="assets/js/app.js"></script>
 </head>
 <body class="book-page">
@@ -42,10 +42,9 @@
     <p class="service-note">We Come To You</p>
     <h1>Book Repair</h1>
     <p class="booking-intro">Tell us your device, the repair issue, and the day and time that works best for you. We will contact you to confirm your mobile repair appointment.</p>
-    <form class="form booking-form" action="https://formsubmit.co/fixandchill1@gmail.com" method="POST">
-      <input type="hidden" name="_subject" value="Fix and Chill repair booking request">
-      <input type="hidden" name="_template" value="table">
-      <input type="hidden" name="_captcha" value="false">
+    <form class="form booking-form" name="repair-booking" action="/thank-you.html" method="POST" data-netlify="true" netlify-honeypot="bot-field">
+      <input type="hidden" name="form-name" value="repair-booking">
+      <p class="hidden"><label>Do not fill this out: <input name="bot-field"></label></p>
       <label>Make
         <input name="make" placeholder="e.g., Apple, Samsung, Google" required>
       </label>

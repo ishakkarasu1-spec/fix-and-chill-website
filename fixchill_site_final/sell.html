@@ -17,7 +17,7 @@
   <meta property="og:url" content="https://www.fixandchillphonerepair.com/sell.html">
   <meta property="og:image" content="https://www.fixandchillphonerepair.com/assets/img/fixchill-logo.png">
   <link rel="icon" href="assets/img/fixchill-logo.png">
-  <link rel="stylesheet" href="assets/css/style.css?v=20260514-mobile-checkbox-video">
+  <link rel="stylesheet" href="assets/css/style.css?v=20260514-netlify-forms">
   <script defer src="assets/js/app.js"></script>
   <script type="application/ld+json">
   {
@@ -80,10 +80,9 @@
   <p>We buy <strong>iPhone</strong>, <strong>Samsung</strong>, <strong>iPad</strong>, <strong>Google Pixel</strong>, <strong>MacBook/Laptop</strong> and <strong>game consoles</strong>. Cracked screen or not turning on? <strong>We still buy it.</strong></p>
   <p><strong>Photo ID (government-issued) is required</strong> for buybacks.</p>
 
-  <form class="form" action="https://formsubmit.co/fixandchill1@gmail.com" method="POST">
-    <input type="hidden" name="_subject" value="Fix and Chill buyback quote request">
-    <input type="hidden" name="_template" value="table">
-    <input type="hidden" name="_captcha" value="false">
+  <form class="form" name="buyback-quote" action="/thank-you.html" method="POST" data-netlify="true" netlify-honeypot="bot-field">
+    <input type="hidden" name="form-name" value="buyback-quote">
+    <p class="hidden"><label>Do not fill this out: <input name="bot-field"></label></p>
     <label>Device Type
       <select name="type" required>
         <option value="">Select device type</option>

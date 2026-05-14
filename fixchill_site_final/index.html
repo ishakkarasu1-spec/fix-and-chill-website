@@ -17,7 +17,7 @@
   <meta property="og:image" content="https://www.fixandchillphonerepair.com/assets/img/fixchill-logo.png">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" href="assets/img/fixchill-logo.png">
-  <link rel="stylesheet" href="assets/css/style.css?v=20260514-mobile-checkbox-video">
+  <link rel="stylesheet" href="assets/css/style.css?v=20260514-netlify-forms">
   <script defer src="assets/js/app.js"></script>
 </head>
 <body>
@@ -64,10 +64,9 @@
       <a class="btn btn-ghost" href="tel:+13027273842">Call (302) 727-3842</a>
     
     
-    <form class="mini-quote" action="https://formsubmit.co/fixandchill1@gmail.com" method="POST">
-      <input type="hidden" name="_subject" value="Fix and Chill instant quote request">
-      <input type="hidden" name="_template" value="table">
-      <input type="hidden" name="_captcha" value="false">
+    <form class="mini-quote" name="instant-quote" action="/thank-you.html" method="POST" data-netlify="true" netlify-honeypot="bot-field">
+      <input type="hidden" name="form-name" value="instant-quote">
+      <p class="hidden"><label>Do not fill this out: <input name="bot-field"></label></p>
       <div class="grid">
         <select name="type" required>
           <option value="">Device type</option>
@@ -103,10 +102,9 @@
 <section id="book-repair" class="section container booking-section">
   <h2>Book Repair</h2>
   <p class="booking-intro">Tell us your device, the issue, and the day and time that works best for you.</p>
-  <form class="form booking-form" action="https://formsubmit.co/fixandchill1@gmail.com" method="POST">
-    <input type="hidden" name="_subject" value="Fix and Chill repair booking request">
-    <input type="hidden" name="_template" value="table">
-    <input type="hidden" name="_captcha" value="false">
+  <form class="form booking-form" name="repair-booking" action="/thank-you.html" method="POST" data-netlify="true" netlify-honeypot="bot-field">
+    <input type="hidden" name="form-name" value="repair-booking">
+    <p class="hidden"><label>Do not fill this out: <input name="bot-field"></label></p>
     <label>Make
       <input name="make" placeholder="e.g., Apple, Samsung, Google" required>
     </label>
@@ -343,6 +341,15 @@
 <a class="fab fab-wa" href="https://wa.me/13027273842" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp 3027273842">WA</a>
 
 
+<form name="visitor-notification" data-netlify="true" netlify-honeypot="bot-field" hidden>
+  <input type="hidden" name="form-name" value="visitor-notification">
+  <input name="bot-field">
+  <input name="page_url">
+  <input name="page_title">
+  <input name="referrer">
+  <input name="visitor_time">
+  <input name="user_agent">
+</form>
 <iframe class="notify-frame" name="visitor-notify-frame" title="Visitor notification"></iframe>
 
 <script type="application/ld+json">

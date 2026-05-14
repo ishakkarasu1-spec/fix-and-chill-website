@@ -14,8 +14,8 @@ document.addEventListener('click', function(e){
   }
 });
 
-// Sends a one-time email notification when a visitor stays longer than 5 seconds.
-// Works on static hosting by posting a hidden form to FormSubmit.
+// Sends a one-time notification when a visitor stays longer than 5 seconds.
+// Netlify records this as a Forms submission.
 (function(){
   const storageKey = 'fixchill_visit_notice_sent';
   if(sessionStorage.getItem(storageKey)) return;
@@ -24,16 +24,8 @@ document.addEventListener('click', function(e){
     if(sessionStorage.getItem(storageKey)) return;
     sessionStorage.setItem(storageKey, '1');
 
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = 'https://formsubmit.co/fixandchill1@gmail.com';
-    form.target = 'visitor-notify-frame';
-    form.style.display = 'none';
-
     const fields = {
-      _subject: 'Fix&Chill website visitor stayed 5+ seconds',
-      _template: 'table',
-      _captcha: 'false',
+      'form-name': 'visitor-notification',
       page_url: window.location.href,
       page_title: document.title,
       referrer: document.referrer || 'Direct / unknown',
@@ -41,16 +33,10 @@ document.addEventListener('click', function(e){
       user_agent: navigator.userAgent
     };
 
-    Object.keys(fields).forEach(function(name){
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = name;
-      input.value = fields[name];
-      form.appendChild(input);
-    });
-
-    document.body.appendChild(form);
-    form.submit();
-    window.setTimeout(function(){ form.remove(); }, 3000);
+    fetch('/', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: new URLSearchParams(fields).toString()
+    }).catch(function(){});
   }, 5000);
 })();
