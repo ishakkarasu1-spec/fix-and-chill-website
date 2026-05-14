@@ -94,8 +94,8 @@ img{max-width:100%;height:auto;display:block}
 /* Floating buttons */
 .fab{position:fixed;right:16px;width:54px;height:54px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;
   box-shadow:0 10px 24px rgba(0,0,0,.25);text-decoration:none;background:#fff}
-.fab-call{bottom:86px;border:2px solid #0E7C86;color:#0E7C86}
-.fab-wa{bottom:20px;border:2px solid #25D366;color:#25D366}
+.fab-call{bottom:164px;border:2px solid #0E7C86;color:#0E7C86}
+.fab-wa{bottom:98px;border:2px solid #25D366;color:#25D366}
 @media (max-width: 500px){.topbar{position:static}}
 
 /* Mini instant-quote form */
@@ -232,8 +232,8 @@ body{background:var(--bg);color:var(--ink)}
   .brand-grid{grid-template-columns:1fr 1fr}
   .footer-cols{text-align:center}
   .fab{width:48px;height:48px;font-size:18px;right:10px}
-  .fab-call{bottom:72px}
-  .fab-wa{bottom:16px}
+  .fab-call{bottom:150px}
+  .fab-wa{bottom:88px}
   .under-condition{display:flex!important;flex-direction:column;align-items:flex-start;gap:12px;margin:4px 0 10px}
   .under-condition .check{display:flex!important;align-items:center;justify-content:flex-start;gap:10px;width:100%;max-width:100%;font-size:16px;line-height:1.25;text-align:left}
   .under-condition .check input{width:22px;min-width:22px;height:22px;margin:0;flex:0 0 22px}
