@@ -37,6 +37,8 @@ img{max-width:100%;height:auto;display:block}
 .tags li{padding:6px 10px;border-radius:999px;background:#fff;border:1px solid #e5e7eb}
 .form{display:grid;gap:12px;max-width:640px}
 .form input,.form select,.form textarea{width:100%;padding:10px;border-radius:10px;border:1px solid #e5e7eb;background:#fff}
+.tally-embed-wrap{overflow:hidden;border-radius:14px;background:#fff;margin-top:18px}
+.tally-embed-wrap iframe{display:block;width:100%;border:0}
 .booking-section{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:28px;box-shadow:0 10px 24px rgba(0,0,0,.05);scroll-margin-top:190px}
 .section.booking-section{padding:46px 44px}
 .booking-section h2{margin-top:0}
