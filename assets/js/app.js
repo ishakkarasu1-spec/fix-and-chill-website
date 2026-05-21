@@ -59,3 +59,41 @@ document.querySelectorAll('.top-slideshow').forEach(function(slideshow){
     showSlide(current + 1);
   }, 4000);
 });
+
+const mobileScrollQuery = window.matchMedia('(max-width: 1024px)');
+function updateMobileScrolledNav(){
+  const shouldCompact = mobileScrollQuery.matches && window.scrollY > 24;
+  document.body.classList.toggle('mobile-nav-scrolled', shouldCompact);
+}
+updateMobileScrolledNav();
+window.addEventListener('scroll', updateMobileScrolledNav, {passive:true});
+mobileScrollQuery.addEventListener('change', updateMobileScrolledNav);
+
+const serviceAreaSearch = document.querySelector('#service-area-search');
+if(serviceAreaSearch){
+  const areaLinks = Array.from(document.querySelectorAll('.area-links a'));
+  const bookRepair = document.querySelector('#book-repair');
+
+  function goToBookRepair(){
+    if(!bookRepair) return;
+    bookRepair.scrollIntoView({behavior:'smooth', block:'start'});
+  }
+
+  serviceAreaSearch.addEventListener('click', goToBookRepair);
+  serviceAreaSearch.addEventListener('focus', goToBookRepair);
+
+  serviceAreaSearch.addEventListener('input', function(){
+    const query = serviceAreaSearch.value.trim().toLowerCase();
+    areaLinks.forEach(function(link){
+      const match = !query || link.textContent.toLowerCase().includes(query);
+      link.style.display = match ? 'inline-flex' : 'none';
+    });
+  });
+
+  areaLinks.forEach(function(link){
+    link.addEventListener('click', function(e){
+      e.preventDefault();
+      goToBookRepair();
+    });
+  });
+}

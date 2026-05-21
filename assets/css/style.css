@@ -53,6 +53,7 @@ img{max-width:100%;height:auto;display:block}
 .section.booking-section{padding:46px 44px}
 .booking-section h2{margin-top:0}
 .booking-intro{margin-top:-6px;color:var(--muted)}
+.booking-area-note{margin:8px 0 0;color:#1f6e6f;font-weight:700}
 .booking-form{max-width:840px;grid-template-columns:1fr}
 @media(min-width:760px){.booking-form{grid-template-columns:1fr 1fr}.booking-form label:last-of-type,.booking-form button{grid-column:1 / -1}}
 .book-main{padding:22px 0 48px}
@@ -131,12 +132,25 @@ img{max-width:100%;height:auto;display:block}
 @media(min-width:900px){.brand-grid{grid-template-columns:repeat(7,1fr)}}
 
 /* Service areas */
-.service-areas p{max-width:920px}
-.service-area-grid{display:grid;grid-template-columns:1fr;gap:12px;list-style:none;padding:0;margin:18px 0 0}
-.service-area-grid li{background:#fff;border:1px solid #e5e7eb;border-left:5px solid var(--primary);border-radius:8px;padding:14px;box-shadow:0 8px 18px rgba(0,0,0,.05)}
-.service-area-grid strong{display:block;font-size:18px;color:#0f172a}
-.service-area-grid span{display:block;margin-top:4px;color:#5b6777}
-@media(min-width:800px){.service-area-grid{grid-template-columns:repeat(3,1fr)}}
+.service-areas{background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:34px;box-shadow:0 12px 28px rgba(15,23,42,.06)}
+.section-eyebrow{margin:0 0 6px;color:#1f6e6f;font-weight:900;text-transform:uppercase;letter-spacing:.03em;font-size:13px}
+.service-areas h2{margin:0 0 8px;font-size:34px;line-height:1.15}
+.service-area-intro{max-width:920px;margin:0 0 18px;color:#5b6777}
+.area-search{display:block;max-width:560px;margin:18px 0 22px}
+.area-search span{display:block;margin-bottom:6px;font-weight:800;color:#0f172a}
+.area-search input{width:100%;padding:13px 14px;border:1px solid #dce4ec;border-radius:12px;background:#f8fafc;font:inherit;color:#0f172a}
+.area-state-grid{display:grid;grid-template-columns:1fr;gap:18px}
+.area-state-card{background:#f8fafc;border:1px solid #e3eaf2;border-radius:16px;padding:20px}
+.area-state-card h3{margin:0 0 12px;font-size:22px}
+.area-links{display:flex;flex-wrap:wrap;gap:9px}
+.area-links a{display:inline-flex;align-items:center;min-height:36px;padding:7px 12px;border-radius:999px;background:#fff;border:1px solid #dce4ec;color:#0f172a;text-decoration:none;font-weight:700;box-shadow:0 4px 12px rgba(15,23,42,.04)}
+.area-links a:hover{border-color:#1f6e6f;color:#1f6e6f;box-shadow:0 8px 18px rgba(31,110,111,.12)}
+.footer-service-areas p,.footer .footer-service-areas{max-width:520px;line-height:1.8}
+.footer-service-areas h4 a{color:var(--ink);text-decoration:none}
+.footer-service-areas h4 a:hover{color:#1f6e6f;text-decoration:underline}
+.footer-service-areas a{color:#1f6e6f;font-weight:700;text-decoration:none}
+.footer-service-areas a:hover{text-decoration:underline}
+@media(min-width:900px){.area-state-grid{grid-template-columns:1.6fr 1fr}}
 
 /* FAQ */
 .faq details{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:10px;margin:8px 0}
@@ -146,7 +160,7 @@ img{max-width:100%;height:auto;display:block}
 .footer-cols{display:grid;grid-template-columns:1fr;gap:16px;text-align:left}
 .footer-cols .col h4{margin:0 0 6px 0}
 .footer-cols .hours{list-style:none;padding:0;margin:0}
-@media(min-width:900px){.footer-cols{grid-template-columns:1fr 1fr 1fr}}
+@media(min-width:900px){.footer-cols{grid-template-columns:1fr .8fr .8fr 1.4fr}}
 
 /* ===== Clean UI Refresh ===== */
 :root{
@@ -185,12 +199,54 @@ body{background:var(--bg);color:var(--ink)}
 /* Footer */
 .footer, .footer-cols{background:transparent;border-top:1px solid #e9eef5;padding-top:24px}
 
+/* Service area section spacing and mobile layout */
+.section.service-areas{
+  padding:42px 38px;
+  margin-top:36px;
+  margin-bottom:44px;
+}
+.service-areas .section-eyebrow{margin-bottom:10px}
+.service-area-intro{margin:0 0 24px}
+.area-search{margin:0 0 26px}
+.area-state-card{padding:24px}
+.area-state-card h3{margin-top:0}
+
 /* Checkboxes directly under Condition */
 .under-condition{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:start;margin-top:-4px;margin-bottom:6px}
 .under-condition .check{display:flex;gap:8px;align-items:flex-start;font-size:.95rem;line-height:1.25}
 .under-condition .check input{width:auto;min-width:18px;height:18px;margin:2px 0 0;flex:0 0 auto}
 .under-condition .check span{display:block}
 @media(max-width:700px){.under-condition{grid-template-columns:1fr;gap:10px}.under-condition .check{justify-content:flex-start;width:100%;font-size:16px}.under-condition .check input{min-width:22px;height:22px}}
+
+@media(min-width:769px) and (max-width:1024px){
+  .nav.sticky{
+    transition:padding .2s ease, min-height .2s ease, background-color .2s ease;
+  }
+  .nav.sticky .logo.logo-wide,
+  .nav.sticky .logo.logo-wide img,
+  .nav.sticky nav,
+  .nav.sticky .nav-service-line{
+    transition:width .2s ease, opacity .15s ease, transform .2s ease, max-height .2s ease;
+  }
+  body.mobile-nav-scrolled .nav.sticky{
+    min-height:70px;
+    padding-top:4px;
+    padding-bottom:4px;
+    gap:0;
+    background:rgba(246,248,251,.96);
+  }
+  body.mobile-nav-scrolled .nav.sticky .logo.logo-wide{
+    --logo-width:204px;
+    width:204px;
+    margin-left:auto;
+    margin-right:auto;
+    justify-self:center;
+  }
+  body.mobile-nav-scrolled .nav.sticky .nav-service-line,
+  body.mobile-nav-scrolled .nav.sticky nav{
+    display:none;
+  }
+}
 
 
 /* Brand */
@@ -230,6 +286,61 @@ body{background:var(--bg);color:var(--ink)}
   .mini-quote input,.mini-quote select,.mini-quote button{width:100%}
   .two-col,.two-col.reverse,.contact-block{grid-template-columns:1fr}
   .section{padding:34px 0}
+  .section.service-areas{
+    width:auto;
+    padding:28px 18px 30px;
+    margin:26px 14px 34px;
+  }
+  .service-areas .section-eyebrow{
+    display:block;
+    margin-bottom:10px;
+    font-size:12px;
+    line-height:1.35;
+    letter-spacing:.05em;
+  }
+  .service-areas h2{
+    margin-bottom:10px;
+    font-size:31px;
+    line-height:1.1;
+  }
+  .service-area-intro{
+    margin-bottom:20px;
+    font-size:15px;
+    line-height:1.6;
+  }
+  .area-search{
+    max-width:100%;
+    margin:0 0 20px;
+  }
+  .area-search span{
+    display:block;
+    margin-bottom:8px;
+  }
+  .area-search input{
+    width:100%;
+    min-height:50px;
+    font-size:16px;
+  }
+  .area-state-grid{
+    gap:14px;
+  }
+  .area-state-card{
+    padding:16px;
+  }
+  .area-state-card h3{
+    margin-bottom:14px;
+    font-size:22px;
+  }
+  .area-links{
+    gap:8px;
+  }
+  .area-links a{
+    width:100%;
+    justify-content:center;
+    min-height:42px;
+    padding:9px 12px;
+    text-align:center;
+  }
   .section.booking-section{padding:34px 24px}
   .booking-section h2{text-align:center}
   .review-video{max-width:430px;margin:12px auto 18px}
@@ -251,10 +362,45 @@ body{background:var(--bg);color:var(--ink)}
   .under-condition .check{display:flex!important;align-items:center;justify-content:flex-start;gap:10px;width:100%;max-width:100%;font-size:16px;line-height:1.25;text-align:left}
   .under-condition .check input{width:22px;min-width:22px;height:22px;margin:0;flex:0 0 22px}
   .under-condition .check span{display:inline-block;max-width:calc(100% - 34px);white-space:normal}
+  .nav.sticky{
+    transition:padding .2s ease, min-height .2s ease, background-color .2s ease;
+  }
+  .nav.sticky .logo.logo-wide,
+  .nav.sticky .logo.logo-wide img,
+  .nav.sticky nav,
+  .nav.sticky .nav-service-line{
+    transition:width .2s ease, opacity .15s ease, transform .2s ease, max-height .2s ease;
+  }
+  body.mobile-nav-scrolled .nav.sticky{
+    min-height:54px;
+    padding-top:3px;
+    padding-bottom:3px;
+    gap:0;
+    background:rgba(246,248,251,.96);
+  }
+  body.mobile-nav-scrolled .nav.sticky .logo.logo-wide{
+    --logo-width:95px;
+    width:95px;
+    flex:0 0 95px;
+    margin-left:auto;
+    margin-right:auto;
+    order:1;
+  }
+  body.mobile-nav-scrolled .nav.sticky .nav-service-line,
+  body.mobile-nav-scrolled .nav.sticky nav{
+    display:none;
+  }
 }
 
 @media(max-width:430px){
   .container{padding-left:24px;padding-right:24px}
+  .section.service-areas{
+    padding:24px 16px 28px;
+    margin-left:14px;
+    margin-right:14px;
+  }
+  .service-areas h2{font-size:29px}
+  .service-area-intro{font-size:14.5px}
   .section.booking-section{padding:30px 20px}
   .book-page-section{margin-left:14px;margin-right:14px}
   .book-page-section h1{font-size:29px}
