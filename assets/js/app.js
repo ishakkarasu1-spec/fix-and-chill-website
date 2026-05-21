@@ -69,31 +69,127 @@ updateMobileScrolledNav();
 window.addEventListener('scroll', updateMobileScrolledNav, {passive:true});
 mobileScrollQuery.addEventListener('change', updateMobileScrolledNav);
 
+const siteModals = Array.from(document.querySelectorAll('.site-modal'));
+function openModalById(id){
+  const modal = document.getElementById(id);
+  if(!modal) return false;
+  siteModals.forEach(function(otherModal){
+    otherModal.classList.remove('is-open');
+    otherModal.setAttribute('aria-hidden', 'true');
+  });
+  modal.classList.add('is-open');
+  modal.setAttribute('aria-hidden', 'false');
+  document.body.classList.add('modal-open');
+  setTimeout(function(){
+    if(window.Tally && typeof window.Tally.loadEmbeds === 'function'){
+      window.Tally.loadEmbeds();
+    }
+  }, 60);
+  const closeButton = modal.querySelector('[data-modal-close]');
+  if(closeButton) closeButton.focus({preventScroll:true});
+  return true;
+}
+
+function closeModal(modal){
+  if(!modal) return;
+  modal.classList.remove('is-open');
+  modal.setAttribute('aria-hidden', 'true');
+  if(!document.querySelector('.site-modal.is-open')){
+    document.body.classList.remove('modal-open');
+  }
+}
+
+document.querySelectorAll('[data-modal-target]').forEach(function(trigger){
+  trigger.addEventListener('click', function(e){
+    const targetId = trigger.getAttribute('data-modal-target');
+    if(openModalById(targetId)){
+      e.preventDefault();
+    }
+  });
+});
+
+document.addEventListener('click', function(e){
+  if(!e.target.matches('[data-modal-close]')) return;
+  closeModal(e.target.closest('.site-modal'));
+});
+
+document.addEventListener('keydown', function(e){
+  if(e.key !== 'Escape') return;
+  closeModal(document.querySelector('.site-modal.is-open'));
+});
+
 const serviceAreaSearch = document.querySelector('#service-area-search');
 if(serviceAreaSearch){
   const areaLinks = Array.from(document.querySelectorAll('.area-links a'));
+  const futureLocationLinks = Array.from(document.querySelectorAll('.location-future-link'));
   const bookRepair = document.querySelector('#book-repair');
+  const availableLocationPages = new Set([
+    '/rehoboth-beach-phone-repair',
+    '/lewes-phone-repair',
+    '/georgetown-phone-repair',
+    '/milford-phone-repair',
+    '/milton-phone-repair',
+    '/millsboro-phone-repair',
+    '/ocean-city-phone-repair',
+    '/salisbury-phone-repair'
+  ]);
 
   function goToBookRepair(){
+    if(openModalById('repair-modal')) return;
     if(!bookRepair) return;
     bookRepair.scrollIntoView({behavior:'smooth', block:'start'});
   }
 
-  serviceAreaSearch.addEventListener('click', goToBookRepair);
-  serviceAreaSearch.addEventListener('focus', goToBookRepair);
+  function normalizedPath(link){
+    try{
+      return new URL(link.getAttribute('href'), window.location.origin).pathname.replace(/\/$/,'');
+    }catch(e){
+      return '';
+    }
+  }
+
+  function handleAreaLink(link){
+    const path = normalizedPath(link);
+    if(availableLocationPages.has(path)){
+      window.location.href = link.getAttribute('href');
+      return;
+    }
+    goToBookRepair();
+  }
 
   serviceAreaSearch.addEventListener('input', function(){
     const query = serviceAreaSearch.value.trim().toLowerCase();
     areaLinks.forEach(function(link){
       const match = !query || link.textContent.toLowerCase().includes(query);
       link.style.display = match ? 'inline-flex' : 'none';
+      const parentPanel = link.closest('details');
+      if(query && match && parentPanel){
+        parentPanel.open = true;
+      }
     });
+  });
+
+  serviceAreaSearch.addEventListener('change', function(){
+    const query = serviceAreaSearch.value.trim().toLowerCase().replace(/,\s*(de|md)$/,'');
+    const match = areaLinks.find(function(link){
+      return link.textContent.trim().toLowerCase() === query;
+    });
+    if(match){
+      handleAreaLink(match);
+    }
   });
 
   areaLinks.forEach(function(link){
     link.addEventListener('click', function(e){
       e.preventDefault();
-      goToBookRepair();
+      handleAreaLink(link);
+    });
+  });
+
+  futureLocationLinks.forEach(function(link){
+    link.addEventListener('click', function(e){
+      e.preventDefault();
+      handleAreaLink(link);
     });
   });
 }
