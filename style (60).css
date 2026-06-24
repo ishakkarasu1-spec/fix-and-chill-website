@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Thank You | Fix&Chill</title>
+  <meta name="robots" content="noindex, follow">
+  <link rel="icon" href="assets/img/favicon.png">
+  <link rel="stylesheet" href="assets/css/style.css?v=20260514-netlify-visitor-fix">
+</head>
+<body>
+<header class="container nav">
+  <a class="logo logo-wide" href="index.html" aria-label="Fix&Chill home"><img src="assets/img/fixchill-logo.png" alt="Fix&Chill mobile phone repair logo"></a>
+  <p class="nav-service-line">Serving Eastern Shore for over 11 years.</p>
+  <nav aria-label="Main navigation">
+    <a href="index.html">Home</a>
+    <a href="sell.html">Sell</a>
+    <a href="repairs.html">Repairs</a>
+    <a href="contact.html" class="btn">Contact</a>
+  </nav>
+</header>
+
+<main class="section container">
+  <div class="contact-card">
+    <p class="service-note">We Come To You</p>
+    <h1>Thank you</h1>
+    <p>Your request was sent. We will contact you as soon as possible.</p>
+    <div class="cta-row">
+      <a class="btn btn-accent" href="index.html">Back to Home</a>
+      <a class="btn" href="tel:+13027273842">Call (302) 727-3842</a>
+    </div>
+  </div>
+</main>
+</body>
+</html>

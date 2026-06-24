@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Thank You | Fix&Chill</title>
+  <meta name="robots" content="noindex, follow">
+  <link rel="icon" href="assets/img/favicon.png">
+  <link rel="stylesheet" href="assets/css/style.css?v=20260521-modal-ux">
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-CQGRLGBX91"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-CQGRLGBX91');
+  </script>
+  <!-- Microsoft Clarity -->
+  <script>
+    (function(c,l,a,r,i,t,y){
+      c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+      t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+      y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "wr01neya2x");
+  </script></head>
+<body>
+<header class="container nav">
+  <a class="logo logo-wide" href="index.html" aria-label="Fix&Chill home"><img src="assets/img/fixchill-logo.png" alt="Fix&Chill mobile phone repair logo"></a>
+  <p class="logo-service-line nav-service-line">Serving Eastern Shore for over 11 years.</p>
+  <nav aria-label="Main navigation">
+    <a href="index.html">Home</a>
+    <a href="sell.html">Sell</a>
+    <a href="repairs.html">Repairs</a>
+    <a href="contact.html" class="btn">Contact</a>
+  </nav>
+</header>
+<div class="topbar">
+  <span>Same-day repair &amp; Buyback</span>
+  <a href="tel:+13027273842" class="topbar-call">Call (302) 727-3842</a>
+</div>
+
+<main class="section container">
+  <div class="contact-card">
+    <p class="service-note">We Come To You</p>
+    <h1>Thank you</h1>
+    <p>Thank you for reaching out to us. We&rsquo;ll contact you shortly.</p>
+    <div class="cta-row">
+      <a class="btn btn-accent" href="index.html">Back to Home</a>
+      <a class="btn" href="tel:+13027273842">Call (302) 727-3842</a>
+    </div>
+  </div>
+</main>
+<!--Start of Tawk.to Script-->
+<script type="text/javascript">
+var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+Tawk_API.customStyle = {
+  visibility: {
+    desktop: {position: 'br', xOffset: 12, yOffset: 12},
+    mobile: {position: 'br', xOffset: 10, yOffset: 10}
+  }
+};
+(function(){
+var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+s1.async=true;
+s1.src='https://embed.tawk.to/6a05e14cf7c7ab1c39ff2f45/1jojfg5bo';
+s1.charset='UTF-8';
+s1.setAttribute('crossorigin','*');
+s0.parentNode.insertBefore(s1,s0);
+})();
+</script>
+<!--End of Tawk.to Script--></body>
+</html>
