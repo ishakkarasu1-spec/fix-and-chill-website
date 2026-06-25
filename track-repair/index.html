@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Track Repair | Fix & Chill Phone Repair</title>
+  <meta name="description" content="Track your Fix & Chill phone repair status by ticket number or phone number and last name.">
+  <link rel="icon" href="../assets/img/fixchill-logo.png">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+  <script defer src="../assets/js/repair-system.js"></script>
+</head>
+<body class="fc-admin-body">
+  <main class="fc-public">
+    <header class="fc-public-header">
+      <a href="../"><img src="../assets/img/fixchill-logo.png" alt="Fix & Chill logo"></a>
+      <a class="fc-btn ghost" href="../">Back to website</a>
+    </header>
+    <section class="fc-card">
+      <h1>Track Your Repair</h1>
+      <p class="fc-muted">Enter your ticket number, or use your phone number and last name.</p>
+      <form id="track-form" class="fc-form two">
+        <label>Ticket number <input name="ticketNumber" placeholder="FC-1001"></label>
+        <div></div>
+        <label>Phone number <input name="phone" placeholder="3027273842"></label>
+        <label>Last name <input name="lastName" placeholder="Smith"></label>
+        <div class="wide fc-actions"><button class="fc-btn" type="submit">Check Status</button></div>
+      </form>
+      <div id="track-error" class="fc-alert bad fc-result" hidden>No repair ticket was found. Please check the information and try again.</div>
+      <div id="track-result" class="fc-result" hidden></div>
+    </section>
+  </main>
+</body>
+</html>
