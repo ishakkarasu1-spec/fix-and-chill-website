@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin | Fix & Chill Repair Manager</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" href="../assets/img/fixchill-logo.png">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+  <script defer src="../assets/js/repair-system.js"></script>
+</head>
+<body class="fc-admin-body">
+  <main id="fc-login" class="fc-login">
+    <form id="login-form" class="fc-card fc-form">
+      <img src="../assets/img/fixchill-logo.png" alt="Fix & Chill logo">
+      <h1>Owner Login</h1>
+      <p>Default setup login: owner@fixandchill.local / FixChill2026!</p>
+      <label>Email <input id="admin-email" type="email" autocomplete="username" required></label>
+      <label>Password <input id="admin-password" type="password" autocomplete="current-password" required></label>
+      <button class="fc-btn" type="submit">Log In</button>
+      <div id="login-error" class="fc-alert bad" hidden>Login failed. Check the owner email and password.</div>
+    </form>
+  </main>
+
+  <div id="fc-admin-app" class="fc-shell" style="display:none">
+    <aside class="fc-sidebar">
+      <div class="fc-brand">
+        <img src="../assets/img/fixchill-logo.png" alt="Fix & Chill logo">
+        <div><strong>Repair Manager</strong><span>Fix & Chill Phone Repair</span></div>
+      </div>
+      <nav class="fc-nav" aria-label="Admin sections">
+        <button type="button" class="active" data-section="dashboard">Dashboard</button>
+        <button type="button" data-section="customers">Customers</button>
+        <button type="button" data-section="tickets">Repair Tickets</button>
+        <button type="button" data-section="orders">Part Orders</button>
+        <button type="button" data-section="inventory">Inventory</button>
+        <button type="button" data-section="campaigns">Campaigns / Email Marketing</button>
+        <button type="button" data-section="search">Search</button>
+      </nav>
+      <button type="button" class="fc-logout">Log Out</button>
+    </aside>
+
+    <main class="fc-main">
+      <div class="fc-topline">
+        <h1>Fix & Chill Admin</h1>
+        <div class="fc-actions">
+          <a href="../track-repair/" target="_blank" rel="noopener noreferrer">Open tracking page</a>
+          <button id="seed-workflow" class="fc-btn accent" type="button">Create Test Workflow</button>
+        </div>
+      </div>
+
+      <section id="section-dashboard" class="fc-section active">
+        <div id="dashboard-stats" class="fc-grid four"></div>
+        <div class="fc-grid two" style="margin-top:16px">
+          <div class="fc-card">
+            <h2>Recent Repair Tickets</h2>
+            <div class="fc-table-wrap"><table class="fc-table"><tbody id="recent-tickets"></tbody></table></div>
+          </div>
+          <div class="fc-card">
+            <h2>Low Stock Items</h2>
+            <div class="fc-table-wrap"><table class="fc-table"><thead><tr><th>Part</th><th>Brand</th><th>Model</th><th>Qty</th><th>Alert</th></tr></thead><tbody id="low-stock-list"></tbody></table></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="section-customers" class="fc-section fc-stack">
+        <form id="customer-form" class="fc-card fc-form two">
+          <h2 class="wide">Customer Management</h2>
+          <label>Full name <input name="fullName" required></label>
+          <label>Phone number <input name="phone" required></label>
+          <label>Email <input name="email" type="email"></label>
+          <label>Address <input name="address"></label>
+          <label>Email marketing consent <select name="emailConsent"><option value="yes">Yes</option><option value="no">No</option></select></label>
+          <label>SMS marketing consent <select name="smsConsent"><option value="no">No</option><option value="yes">Yes</option></select></label>
+          <label>Unsubscribed <select name="unsubscribed"><option value="no">No</option><option value="yes">Yes</option></select></label>
+          <label class="wide">Notes <textarea name="notes"></textarea></label>
+          <div class="wide fc-actions">
+            <button id="customer-submit" class="fc-btn" type="submit">Add Customer</button>
+            <button id="customer-reset" class="fc-btn secondary" type="button">Clear</button>
+          </div>
+        </form>
+        <div class="fc-card">
+          <input id="customer-search" class="fc-search" type="search" placeholder="Search customer by name, phone, or email">
+          <div class="fc-table-wrap" style="margin-top:12px"><table class="fc-table"><thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Consent</th><th>Address</th><th>Notes</th><th>Created</th><th>Actions</th></tr></thead><tbody id="customers-table"></tbody></table></div>
+        </div>
+      </section>
+
+      <section id="section-tickets" class="fc-section fc-stack">
+        <form id="ticket-form" class="fc-card fc-form three">
+          <h2 class="wide">Repair Ticket System</h2>
+          <label>Customer <select id="ticket-customer" name="customerId" required></select></label>
+          <label>Device brand <select id="ticket-brand" name="brandId" required></select></label>
+          <label>Device model <select id="ticket-model" name="deviceModelId" required></select></label>
+          <label>IMEI or serial number <input name="serial"></label>
+          <label>Estimated price <input name="estimatedPrice" type="number" step="0.01" min="0"></label>
+          <label>Final price <input name="finalPrice" type="number" step="0.01" min="0"></label>
+          <label>Repair status <select id="ticket-status" class="status-select" data-kind="ticket" name="status" required></select></label>
+          <label>Estimated completion date <input name="estimatedCompletion" type="date"></label>
+          <label>Completed date <input name="completedAt" type="date"></label>
+          <label class="wide">Problem description <textarea name="problem" required></textarea></label>
+          <label class="wide">Public message from shop <textarea name="publicMessage" placeholder="Shown to customers on /track-repair"></textarea></label>
+          <label class="wide">Technician notes <textarea name="technicianNotes" placeholder="Private admin-only notes"></textarea></label>
+          <div class="wide fc-actions">
+            <button id="ticket-submit" class="fc-btn" type="submit">Create Ticket</button>
+            <button id="ticket-reset" class="fc-btn secondary" type="button">Clear</button>
+          </div>
+        </form>
+        <div class="fc-card">
+          <input id="ticket-search" class="fc-search" type="search" placeholder="Search by customer, phone, ticket number, or device model">
+          <div class="fc-table-wrap" style="margin-top:12px"><table class="fc-table"><thead><tr><th>Ticket</th><th>Customer</th><th>Device</th><th>Problem</th><th>Status</th><th>ETA</th><th>Estimate</th><th>Final</th><th>Created</th><th>Actions</th></tr></thead><tbody id="tickets-table"></tbody></table></div>
+        </div>
+        <form id="ticket-part-form" class="fc-card fc-form three">
+          <h2 class="wide">Use Part From Inventory</h2>
+          <label>Repair ticket <select id="ticket-part-ticket" name="ticketId" required></select></label>
+          <label>Part category <select id="ticket-part-category" name="partCategoryId" required></select></label>
+          <label>Available compatible part <select id="ticket-part-inventory" name="inventoryPartId" required></select></label>
+          <label>Quantity used <input id="ticket-part-quantity" name="quantity" type="number" min="1" value="1" required></label>
+          <label><span>Mark ticket completed</span><select id="ticket-part-complete"><option value="">No, keep in repair</option><option value="yes">Yes, mark completed</option></select></label>
+          <div class="wide fc-actions"><button class="fc-btn accent" type="submit">Install Part and Update Stock</button></div>
+          <div id="ticket-part-message" class="wide fc-alert" hidden></div>
+        </form>
+      </section>
+
+      <section id="section-orders" class="fc-section fc-stack">
+        <form id="order-form" class="fc-card fc-form three">
+          <h2 class="wide">Part Order System</h2>
+          <label>Repair ticket <select id="order-ticket" name="ticketId" required></select></label>
+          <label>Brand <select id="order-brand" name="brandId" required></select></label>
+          <label>Device model <select id="order-device-model" name="deviceModelId" required></select></label>
+          <label>Part category <select id="order-category" name="partCategoryId" required></select></label>
+          <label>Existing inventory item <select id="order-inventory-part" name="inventoryPartId"></select></label>
+          <label>Part name <input name="partName" required></label>
+          <label>Quality type <select class="quality-select" name="qualityType"></select></label>
+          <label>Vendor / supplier <input name="vendor"></label>
+          <label>Ordered quantity <input name="quantity" type="number" min="1" value="1"></label>
+          <label>Order cost <input name="orderCost" type="number" step="0.01" min="0"></label>
+          <label>Selling price <input name="sellingPrice" type="number" step="0.01" min="0"></label>
+          <label>Tracking number <input name="trackingNumber"></label>
+          <label>Estimated arrival date <input name="estimatedArrival" type="date"></label>
+          <label>Received date <input name="receivedDate" type="date"></label>
+          <label>Order status <select id="order-status" class="status-select" data-kind="order" name="status" required></select></label>
+          <div class="wide fc-actions">
+            <button id="order-submit" class="fc-btn" type="submit">Create Part Order</button>
+            <button id="order-reset" class="fc-btn secondary" type="button">Clear</button>
+          </div>
+        </form>
+        <form id="install-form" class="fc-card fc-form two">
+          <h2 class="wide">Install Received Part</h2>
+          <label>Received part order <select id="install-order" name="orderId" required></select></label>
+          <label><span>Complete repair ticket</span><select id="install-complete"><option value="">No, keep in repair</option><option value="yes">Yes, mark completed</option></select></label>
+          <div class="wide fc-actions"><button class="fc-btn accent" type="submit">Install Part and Subtract Stock</button></div>
+          <div id="install-message" class="wide fc-alert" hidden></div>
+        </form>
+        <div class="fc-card">
+          <div class="fc-table-wrap"><table class="fc-table"><thead><tr><th>Ticket</th><th>Customer</th><th>Model</th><th>Part</th><th>Category</th><th>Vendor</th><th>Status</th><th>Tracking</th><th>ETA</th><th>Ticket Stock</th><th>Actions</th></tr></thead><tbody id="orders-table"></tbody></table></div>
+        </div>
+      </section>
+
+      <section id="section-inventory" class="fc-section fc-stack">
+        <form id="catalog-form" class="fc-card fc-form three">
+          <h2 class="wide">Catalog Setup</h2>
+          <label>New brand <input name="brandName" placeholder="Apple, Samsung, Google"></label>
+          <label>New model brand <select id="catalog-model-brand" name="modelBrandId"></select></label>
+          <label>New model name <input name="modelName" placeholder="iPhone 13, Galaxy S22"></label>
+          <label>Device type <select id="catalog-device-type" name="deviceType"></select></label>
+          <label>New part category <input name="categoryName" placeholder="Screen, Battery, Charging Port"></label>
+          <div class="wide fc-actions"><button class="fc-btn secondary" type="submit">Add Catalog Items</button></div>
+          <div id="catalog-message" class="wide fc-alert" hidden></div>
+        </form>
+        <form id="inventory-form" class="fc-card fc-form three">
+          <h2 class="wide">Inventory / Stock System</h2>
+          <label>Brand <select id="inventory-brand" name="brandId" required></select></label>
+          <label>Device model <select id="inventory-model" name="deviceModelId" required></select></label>
+          <label>Part category <select id="inventory-category" name="partCategoryId" required></select></label>
+          <label>Part name <input name="partName" required></label>
+          <label>Quality type <select class="quality-select" name="qualityType"></select></label>
+          <label>SKU <input name="sku"></label>
+          <label>Barcode <input name="barcode"></label>
+          <label>Vendor / supplier <input name="vendor"></label>
+          <label>Cost price <input name="costPrice" type="number" step="0.01" min="0"></label>
+          <label>Selling price <input name="sellingPrice" type="number" step="0.01" min="0"></label>
+          <label>Quantity in stock <input name="quantityInStock" type="number" min="0" value="0" required></label>
+          <label>Low stock alert quantity <input name="lowStockAlertQuantity" type="number" min="0" value="1"></label>
+          <label>Shelf location <input name="shelfLocation" placeholder="A1, Drawer 3"></label>
+          <label class="wide">Notes <textarea name="notes"></textarea></label>
+          <div class="wide fc-actions">
+            <button id="inventory-submit" class="fc-btn" type="submit">Save Inventory Item</button>
+            <button id="inventory-reset" class="fc-btn secondary" type="button">Clear</button>
+          </div>
+        </form>
+        <div class="fc-card">
+          <h2>Inventory</h2>
+          <div class="fc-filter-grid">
+            <input id="inventory-search" class="fc-search" type="search" placeholder="Search part, SKU, barcode, vendor, notes">
+            <select id="inventory-filter-brand"></select>
+            <select id="inventory-filter-model"></select>
+            <select id="inventory-filter-category"></select>
+            <label class="fc-check-row"><input id="inventory-filter-low" type="checkbox"> Low stock only</label>
+          </div>
+          <div class="fc-table-wrap" style="margin-top:12px"><table class="fc-table"><thead><tr><th>Brand → Model → Category</th><th>Part Item</th><th>Quality</th><th>SKU / Barcode</th><th>Stock</th><th>Cost</th><th>Selling</th><th>Vendor</th><th>Shelf</th><th>Actions</th></tr></thead><tbody id="inventory-table"></tbody></table></div>
+        </div>
+        <div class="fc-card">
+          <h2>Usage History</h2>
+          <div class="fc-table-wrap"><table class="fc-table"><thead><tr><th>Date</th><th>Ticket</th><th>Brand</th><th>Model</th><th>Category</th><th>Part</th><th>Qty</th></tr></thead><tbody id="usage-table"></tbody></table></div>
+        </div>
+      </section>
+
+      <section id="section-campaigns" class="fc-section fc-stack">
+        <form id="campaign-form" class="fc-card fc-form three">
+          <h2 class="wide">Campaigns / Email Marketing</h2>
+          <p class="wide fc-muted">Campaigns are never created automatically. Create the campaign, choose the offer, select the target, then schedule the exact send date and time.</p>
+          <label>Campaign name <input name="campaignName" required></label>
+          <label>Campaign title / email subject <input name="subject" required></label>
+          <label>Campaign status <select id="campaign-status" name="status" required></select></label>
+          <label>Discount type <select id="discount-type" name="discountType" required></select></label>
+          <label>Discount amount <input name="discountAmount" placeholder="15%, $20, Free, etc."></label>
+          <label>Coupon code <input name="couponCode" placeholder="BATTERY15"></label>
+          <label>Start date <input name="startDate" type="date" required></label>
+          <label>End date <input name="endDate" type="date" required></label>
+          <label>Send date <input name="sendDate" type="date" required></label>
+          <label>Send time <input name="sendTime" type="time" required></label>
+          <label>Target customers <select id="campaign-target" name="targetType" required></select></label>
+          <label id="device-type-field">Device type / model filter <input name="targetDeviceType" placeholder="iPhone, Samsung, iPhone 14"></label>
+          <label class="wide">Campaign message <textarea name="message" required></textarea></label>
+          <div id="manual-customer-picker" class="wide fc-checkbox-list"></div>
+          <div class="wide fc-actions">
+            <button id="campaign-submit" class="fc-btn" type="submit">Create Campaign</button>
+            <button id="campaign-reset" class="fc-btn secondary" type="button">Clear</button>
+            <button id="process-campaigns" class="fc-btn accent" type="button">Process Due Campaigns</button>
+          </div>
+          <div id="campaign-message" class="wide fc-alert" hidden></div>
+        </form>
+
+        <div class="fc-card">
+          <h2>Campaign List</h2>
+          <div class="fc-table-wrap"><table class="fc-table"><thead><tr><th>Campaign</th><th>Coupon</th><th>Start</th><th>End</th><th>Send date/time</th><th>Status</th><th>Targeted</th><th>Sent</th><th>Actions</th></tr></thead><tbody id="campaigns-table"></tbody></table></div>
+        </div>
+
+        <div id="campaign-detail" class="fc-card" hidden></div>
+      </section>
+
+      <section id="section-search" class="fc-section fc-stack">
+        <div class="fc-card">
+          <h2>Admin Search</h2>
+          <input id="global-search" class="fc-search" type="search" placeholder="Search customer name, phone, ticket number, device model, or part name">
+          <div id="search-results" style="margin-top:14px"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
