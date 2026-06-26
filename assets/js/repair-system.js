@@ -7,7 +7,7 @@
   const ADMIN_PASSWORD = 'FixChill2026!';
 
   const repairStatuses = [
-    'Device Received','Diagnosis','Part Ordered','Waiting for Part','Part Received',
+    'Booked','Device Received','Diagnosis','Part Ordered','Waiting for Part','Part Received',
     'Scheduled Visit','In Repair','Ready for Pickup','Completed','Delivered','Cancelled'
   ];
   const orderStatuses = ['Not Ordered','Ordered','Shipped','Received','Cancelled'];
@@ -26,6 +26,17 @@
     'Customers repaired in last 1 year',
     'Customers by device type',
     'Manual selected customers'
+  ];
+  const defaultApplePhoneModels = [
+    'iPhone 8','iPhone 8 Plus','iPhone X','iPhone XR','iPhone XS','iPhone XS Max',
+    'iPhone 11','iPhone 11 Pro','iPhone 11 Pro Max',
+    'iPhone 12','iPhone 12 mini','iPhone 12 Pro','iPhone 12 Pro Max',
+    'iPhone 13','iPhone 13 mini','iPhone 13 Pro','iPhone 13 Pro Max',
+    'iPhone 14','iPhone 14 Plus','iPhone 14 Pro','iPhone 14 Pro Max',
+    'iPhone 15','iPhone 15 Plus','iPhone 15 Pro','iPhone 15 Pro Max',
+    'iPhone 16','iPhone 16 Plus','iPhone 16 Pro','iPhone 16 Pro Max',
+    'iPhone 17','iPhone 17 Plus','iPhone 17 Pro','iPhone 17 Pro Max',
+    'iPhone SE 2nd Gen','iPhone SE 3rd Gen'
   ];
 
   const $ = (selector, root=document) => root.querySelector(selector);
@@ -55,7 +66,15 @@
       inventory:[],
       usage:[],
       campaigns:[],
-      emailLog:[]
+      emailLog:[],
+      notificationQueue:[],
+      emailSettings:{
+        provider:'',
+        fromName:'Fix & Chill Phone Repair',
+        fromEmail:'fixandchill1@gmail.com',
+        replyTo:'fixandchill1@gmail.com',
+        enabled:false
+      }
     };
   }
 
@@ -100,6 +119,11 @@
     return model.id;
   }
 
+  function seedDefaultDeviceModels(data){
+    const appleId = ensureBrand(data, 'Apple');
+    defaultApplePhoneModels.forEach(model => ensureModel(data, appleId, model, 'Phone'));
+  }
+
   function brandById(data, id){
     return data.brands.find(brand => brand.id === id);
   }
@@ -138,6 +162,7 @@
       if(!findByName(data.brands, 'brandName', brand.brandName)) data.brands.push(brand);
     });
     data.deviceModels = data.deviceModels || [];
+    seedDefaultDeviceModels(data);
     data.partCategories = (data.partCategories && data.partCategories.length ? data.partCategories : defaults.partCategories).map(category => ({
       id:category.id || `cat-${slug(category.categoryName || category.name)}`,
       categoryName:category.categoryName || category.name || ''
@@ -196,6 +221,8 @@
         campaign.createdAt = campaign.createdAt || today();
       });
       data.emailLog = data.emailLog || [];
+      data.notificationQueue = data.notificationQueue || [];
+      data.emailSettings = Object.assign(defaultData().emailSettings, data.emailSettings || {});
       return data;
     }catch(e){
       return defaultData();
@@ -369,7 +396,7 @@
   function statusPill(status){
     const good = ['Received','Ready for Pickup','Completed','Delivered','Part Received','Sent'].includes(status);
     const bad = ['Cancelled'].includes(status);
-    const warn = ['Waiting for Part','Part Ordered','Ordered','Shipped','Diagnosis','Draft','Scheduled','Expired'].includes(status);
+    const warn = ['Booked','Waiting for Part','Part Ordered','Ordered','Shipped','Diagnosis','Draft','Scheduled','Expired'].includes(status);
     return `<span class="fc-pill ${good ? 'good' : bad ? 'bad' : warn ? 'warn' : ''}">${escapeHtml(status || '')}</span>`;
   }
 
@@ -434,7 +461,7 @@
 
   function campaignEmailBody(campaign, customer){
     const unsubscribeUrl = `${location.origin}/unsubscribe/?customer=${encodeURIComponent(customer.id)}&campaign=${encodeURIComponent(campaign.id)}`;
-    return [
+    const lines = [
       'Fix & Chill Phone Repair',
       '',
       campaign.subject,
@@ -447,13 +474,61 @@
       `Discount: ${campaign.discountAmount || ''} ${campaign.discountType || ''}`.trim(),
       `Offer starts: ${campaign.startDate}`,
       `Offer ends: ${campaign.endDate}`,
-      '',
+      ''
+    ];
+    if(campaign.includeBrochure === 'yes'){
+      lines.push('Campaign brochure:');
+      lines.push(campaign.brochureHeadline || campaign.campaignName || campaign.subject || 'Special offer');
+      if(campaign.brochureDetails) lines.push(campaign.brochureDetails);
+      if(campaign.brochureImageUrl) lines.push(`Image: ${campaign.brochureImageUrl}`);
+      lines.push('');
+    }
+    lines.push(
       'Contact Fix & Chill Phone Repair:',
       '(302) 727-3842',
       'fixandchill1@gmail.com',
       '',
       `Unsubscribe: ${unsubscribeUrl}`
-    ].join('\n');
+    );
+    return lines.join('\n');
+  }
+
+  function repairNotificationBody(ticket, customer){
+    return [
+      'Fix & Chill Phone Repair',
+      '',
+      `Repair ticket update: ${ticket.ticketNumber}`,
+      '',
+      `Hi ${customer.fullName || 'there'},`,
+      '',
+      `Your ${ticket.deviceBrand || ''} ${ticket.deviceModel || ''} repair status is: ${ticket.status}.`.trim(),
+      ticket.estimatedCompletion ? `Estimated completion: ${ticket.estimatedCompletion}` : '',
+      ticket.publicMessage ? `Message from shop: ${ticket.publicMessage}` : '',
+      '',
+      'Contact Fix & Chill Phone Repair:',
+      '(302) 727-3842',
+      'fixandchill1@gmail.com'
+    ].filter(Boolean).join('\n');
+  }
+
+  function queueRepairEmailNotification(data, ticket){
+    const customer = customerById(data, ticket.customerId);
+    if(!customer || !customer.email || customer.emailConsent !== 'yes' || customer.unsubscribed === 'yes') return;
+    data.notificationQueue.push({
+      id:uid(),
+      type:'repair-ticket-email',
+      status:'Pending provider setup',
+      provider:data.emailSettings.provider || '',
+      customerId:customer.id,
+      customerName:customer.fullName,
+      email:customer.email,
+      ticketId:ticket.id,
+      ticketNumber:ticket.ticketNumber,
+      subject:`Fix & Chill repair update: ${ticket.ticketNumber}`,
+      body:repairNotificationBody(ticket, customer),
+      createdAt:new Date().toISOString(),
+      note:'Email provider not connected yet. Ready for SendGrid/Mailgun/Resend/Laravel mail later.'
+    });
   }
 
   function processDueCampaigns(data){
@@ -543,6 +618,8 @@
       button.addEventListener('click', () => {
         current = button.dataset.section;
         render();
+        const section = $(`#section-${current}`);
+        if(section) section.scrollIntoView({behavior:'smooth', block:'start'});
       });
     });
 
@@ -566,6 +643,7 @@
       populateSelect($('#ticket-customer'), data.customers, customer => customer.id, customerLabel, $('#ticket-customer').value);
       populateSelect($('#ticket-brand'), data.brands, brand => brand.id, brand => brand.brandName, $('#ticket-brand').value);
       populateModelsForBrand($('#ticket-model'), data, $('#ticket-brand').value, $('#ticket-model').value);
+      populatePlainSelect($('#ticket-new-model-type'), deviceTypes, $('#ticket-new-model-type') ? $('#ticket-new-model-type').value || 'Phone' : 'Phone');
       populateSelect($('#order-ticket'), data.tickets, ticket => ticket.id, ticketLabel, $('#order-ticket').value);
       populateSelect($('#order-brand'), data.brands, brand => brand.id, brand => brand.brandName, $('#order-brand').value);
       populateModelsForBrand($('#order-device-model'), data, $('#order-brand').value, $('#order-device-model').value);
@@ -712,19 +790,22 @@
         values.deviceModel = modelName(data, values.deviceModelId);
         Object.assign(ticket, values);
         ticket.completedAt = ['Completed','Delivered'].includes(ticket.status) ? (ticket.completedAt || today()) : '';
+        queueRepairEmailNotification(data, ticket);
       }else{
         values.deviceBrand = brandName(data, values.brandId);
         values.deviceModel = modelName(data, values.deviceModelId);
         values.ticketNumber = `FC-${data.nextTicket++}`;
         values.createdAt = today();
         values.completedAt = ['Completed','Delivered'].includes(values.status) ? today() : '';
-        data.tickets.push(Object.assign({id:uid()}, values));
+        const ticket = Object.assign({id:uid()}, values);
+        data.tickets.push(ticket);
+        queueRepairEmailNotification(data, ticket);
       }
       saveData(data);
       editing.ticket = null;
       $('#ticket-submit').textContent = 'Create Ticket';
       event.currentTarget.reset();
-      $('#ticket-status').value = 'Device Received';
+      $('#ticket-status').value = 'Booked';
       render();
     });
 
@@ -732,7 +813,7 @@
       editing.ticket = null;
       $('#ticket-submit').textContent = 'Create Ticket';
       $('#ticket-form').reset();
-      $('#ticket-status').value = 'Device Received';
+      $('#ticket-status').value = 'Booked';
     });
 
     $('#ticket-search').addEventListener('input', renderTickets);
@@ -968,6 +1049,24 @@
       });
     });
 
+    if($('#ticket-add-model')) $('#ticket-add-model').addEventListener('click', () => {
+      data = loadData();
+      const brandId = $('#ticket-brand').value;
+      const modelInput = $('#ticket-new-model-name');
+      const message = $('#ticket-model-message');
+      const modelNameValue = String(modelInput.value || '').trim();
+      if(!brandId || !modelNameValue){
+        message.textContent = 'Choose a brand and type the model name first.';
+        return;
+      }
+      const modelId = ensureModel(data, brandId, modelNameValue, $('#ticket-new-model-type').value || 'Phone');
+      saveData(data);
+      populateAllSelects();
+      $('#ticket-model').value = modelId;
+      modelInput.value = '';
+      message.textContent = `${modelNameValue} added and selected.`;
+    });
+
     if($('#inventory-search')) $('#inventory-search').addEventListener('input', renderInventory);
     if($('#inventory-filter-low')) $('#inventory-filter-low').addEventListener('change', renderInventory);
 
@@ -985,6 +1084,53 @@
 
     function campaignLog(campaignId, status){
       return data.emailLog.filter(log => log.campaignId === campaignId && (!status || log.status === status));
+    }
+
+    function campaignDraftFromForm(){
+      const form = $('#campaign-form');
+      if(!form) return {};
+      return Object.assign({
+        campaignName:'',
+        subject:'',
+        message:'',
+        discountType:'',
+        discountAmount:'',
+        couponCode:'',
+        startDate:'',
+        endDate:'',
+        includeBrochure:'no',
+        brochureHeadline:'',
+        brochureDetails:'',
+        brochureImageUrl:''
+      }, formToObject(form));
+    }
+
+    function brochureMarkup(campaign){
+      const headline = campaign.brochureHeadline || campaign.campaignName || campaign.subject || 'Fix & Chill Special Offer';
+      const details = campaign.brochureDetails || campaign.message || 'Campaign details will appear here.';
+      const offer = [campaign.discountAmount, campaign.discountType].filter(Boolean).join(' ') || campaign.couponCode || 'Special offer';
+      const img = campaign.brochureImageUrl ? `<img src="${escapeHtml(campaign.brochureImageUrl)}" alt="${escapeHtml(headline)}">` : '<div class="fc-brochure-placeholder">Brochure image preview</div>';
+      return `
+        <div class="fc-brochure-art">
+          <div class="fc-brochure-copy">
+            <span class="fc-brochure-offer">${escapeHtml(offer)}</span>
+            <h4>${escapeHtml(headline)}</h4>
+            <p>${escapeHtml(details)}</p>
+            <p><strong>Coupon:</strong> ${escapeHtml(campaign.couponCode || 'N/A')}</p>
+            <p>${escapeHtml(campaign.startDate || 'Start date')} - ${escapeHtml(campaign.endDate || 'End date')}</p>
+            <p>Fix & Chill Phone Repair · (302) 727-3842</p>
+          </div>
+          <div class="fc-brochure-image">${img}</div>
+        </div>`;
+    }
+
+    function renderCampaignBrochurePreview(){
+      const preview = $('#campaign-brochure-preview');
+      if(!preview) return;
+      const campaign = campaignDraftFromForm();
+      preview.innerHTML = campaign.includeBrochure === 'yes'
+        ? brochureMarkup(campaign)
+        : '<div class="fc-alert">Brochure is currently not included. Select “Yes” to include it in this campaign.</div>';
     }
 
     function campaignRows(campaigns){
@@ -1027,17 +1173,37 @@
       picker.innerHTML = data.customers.length ? data.customers.map(customer => `
         <label class="fc-check-row">
           <input type="checkbox" name="manualCustomerIds" value="${escapeHtml(customer.id)}"${selected.has(customer.id) ? ' checked' : ''}>
-          <span>${escapeHtml(customer.fullName)} ${customer.email ? `(${escapeHtml(customer.email)})` : '(no email)'}</span>
+          <span>${escapeHtml(customer.fullName)} · ${escapeHtml(customer.phone || 'no phone')} · ${customer.email ? escapeHtml(customer.email) : 'no email'}</span>
         </label>`).join('') : '<p class="fc-muted">Add customers before using manual selection.</p>';
+      renderCampaignBrochurePreview();
     }
 
     function renderCampaigns(){
       if(!$('#campaigns-table')) return;
       $('#campaigns-table').innerHTML = campaignRows(data.campaigns.slice().reverse());
+      renderEmailInfrastructurePanel();
       const detail = $('#campaign-detail');
       if(detail && detail.dataset.campaignId){
         renderCampaignDetail(detail.dataset.campaignId);
       }
+    }
+
+    function renderEmailInfrastructurePanel(){
+      const panel = $('#email-infrastructure-panel');
+      if(!panel) return;
+      const pending = data.notificationQueue.filter(item => item.status === 'Pending provider setup');
+      panel.innerHTML = `
+        <h2>Email Delivery Infrastructure</h2>
+        <div class="fc-alert">
+          Real automatic email sending is prepared but not connected yet. Choose a provider later, such as SendGrid, Mailgun, Resend, Amazon SES, or Laravel Mail.
+        </div>
+        <div class="fc-grid three" style="margin-top:12px">
+          <div class="fc-result-item"><span>Provider</span><strong>${escapeHtml(data.emailSettings.provider || 'Not selected')}</strong></div>
+          <div class="fc-result-item"><span>From email</span><strong>${escapeHtml(data.emailSettings.fromEmail)}</strong></div>
+          <div class="fc-result-item"><span>Pending repair notifications</span><strong>${pending.length}</strong></div>
+        </div>
+        <h3>Queued Repair Ticket Emails</h3>
+        <div class="fc-table-wrap"><table class="fc-table"><tbody>${pending.length ? pending.slice().reverse().map(item => `<tr><td>${escapeHtml(item.createdAt)}</td><td>${escapeHtml(item.ticketNumber)}</td><td>${escapeHtml(item.customerName)}</td><td>${escapeHtml(item.email)}</td><td>${escapeHtml(item.status)}</td></tr>`).join('') : '<tr><td>No pending repair email notifications.</td></tr>'}</tbody></table></div>`;
     }
 
     function renderCampaignDetail(campaignId){
@@ -1070,8 +1236,10 @@
         </div>
         <h3>Campaign Message</h3>
         <p>${escapeHtml(campaign.message)}</p>
+        <h3>Brochure</h3>
+        ${campaign.includeBrochure === 'yes' ? brochureMarkup(campaign) : '<p class="fc-muted">Brochure was not included in this campaign.</p>'}
         <h3>Target Customer List</h3>
-        <div class="fc-table-wrap"><table class="fc-table"><tbody>${targets.length ? targets.map(customer => `<tr><td>${escapeHtml(customer.fullName)}</td><td>${escapeHtml(customer.email)}</td><td>${customer.emailConsent === 'yes' ? 'Email consent yes' : 'No email consent'}</td><td>${customer.unsubscribed === 'yes' ? 'Unsubscribed' : 'Subscribed'}</td></tr>`).join('') : '<tr><td>No customers match this target.</td></tr>'}</tbody></table></div>
+        <div class="fc-table-wrap"><table class="fc-table"><tbody>${targets.length ? targets.map(customer => `<tr><td>${escapeHtml(customer.fullName)}</td><td>${escapeHtml(customer.phone || '')}</td><td>${escapeHtml(customer.email)}</td><td>${customer.emailConsent === 'yes' ? 'Email consent yes' : 'No email consent'}</td><td>${customer.unsubscribed === 'yes' ? 'Unsubscribed' : 'Subscribed'}</td></tr>`).join('') : '<tr><td>No customers match this target.</td></tr>'}</tbody></table></div>
         <h3>Sent Emails</h3>
         <div class="fc-table-wrap"><table class="fc-table"><tbody>${sent.length ? sent.map(log => `<tr><td>${escapeHtml(log.sentAt)}</td><td>${escapeHtml(log.customerName)}</td><td>${escapeHtml(log.email)}</td></tr>`).join('') : '<tr><td>No sent emails yet.</td></tr>'}</tbody></table></div>
         <h3>Failed Emails</h3>
@@ -1081,6 +1249,8 @@
     }
 
     $('#campaign-target').addEventListener('change', renderManualCustomerPicker);
+    $('#campaign-form').addEventListener('input', renderCampaignBrochurePreview);
+    $('#campaign-form').addEventListener('change', renderCampaignBrochurePreview);
 
     $('#campaign-form').addEventListener('submit', event => {
       event.preventDefault();
@@ -1107,10 +1277,12 @@
       $('#campaign-submit').textContent = 'Create Campaign';
       event.currentTarget.reset();
       $('#campaign-status').value = 'Draft';
+      $('#campaign-include-brochure').value = 'no';
       message.className = 'wide fc-alert good';
       message.textContent = 'Campaign saved. Scheduled campaigns will only send after the selected send date and time.';
       message.hidden = false;
       render();
+      renderCampaignBrochurePreview();
     });
 
     $('#campaign-reset').addEventListener('click', () => {
@@ -1118,8 +1290,10 @@
       $('#campaign-submit').textContent = 'Create Campaign';
       $('#campaign-form').reset();
       $('#campaign-status').value = 'Draft';
+      $('#campaign-include-brochure').value = 'no';
       $('#campaign-message').hidden = true;
       renderManualCustomerPicker();
+      renderCampaignBrochurePreview();
     });
 
     $('#process-campaigns').addEventListener('click', () => {
@@ -1225,6 +1399,7 @@
         render();
         fillForm($('#campaign-form'), campaign);
         renderManualCustomerPicker();
+        renderCampaignBrochurePreview();
         window.scrollTo({top:0, behavior:'smooth'});
       }
       if(target.dataset.cancelCampaign && confirm('Cancel this campaign? It will not send after cancellation.')){

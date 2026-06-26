@@ -91,6 +91,13 @@
           <label>Customer <select id="ticket-customer" name="customerId" required></select></label>
           <label>Device brand <select id="ticket-brand" name="brandId" required></select></label>
           <label>Device model <select id="ticket-model" name="deviceModelId" required></select></label>
+          <div class="wide fc-inline-add">
+            <strong>Model not listed?</strong>
+            <input id="ticket-new-model-name" type="text" placeholder="Example: iPhone 15 Pro Max">
+            <select id="ticket-new-model-type"></select>
+            <button id="ticket-add-model" class="fc-btn secondary" type="button">Add Model</button>
+            <span id="ticket-model-message" class="fc-muted"></span>
+          </div>
           <label>IMEI or serial number <input name="serial"></label>
           <label>Estimated price <input name="estimatedPrice" type="number" step="0.01" min="0"></label>
           <label>Final price <input name="finalPrice" type="number" step="0.01" min="0"></label>
@@ -222,6 +229,14 @@
           <label>Target customers <select id="campaign-target" name="targetType" required></select></label>
           <label id="device-type-field">Device type / model filter <input name="targetDeviceType" placeholder="iPhone, Samsung, iPhone 14"></label>
           <label class="wide">Campaign message <textarea name="message" required></textarea></label>
+          <label>Include brochure in campaign <select id="campaign-include-brochure" name="includeBrochure"><option value="no">No</option><option value="yes">Yes</option></select></label>
+          <label>Brochure headline <input name="brochureHeadline" placeholder="July Battery Special"></label>
+          <label>Brochure image URL <input name="brochureImageUrl" placeholder="https://..."></label>
+          <label class="wide">Brochure details <textarea name="brochureDetails" placeholder="Short text shown in the campaign brochure preview"></textarea></label>
+          <div class="wide">
+            <h3>Campaign Brochure Preview</h3>
+            <div id="campaign-brochure-preview" class="fc-brochure-preview"></div>
+          </div>
           <div id="manual-customer-picker" class="wide fc-checkbox-list"></div>
           <div class="wide fc-actions">
             <button id="campaign-submit" class="fc-btn" type="submit">Create Campaign</button>
@@ -236,6 +251,7 @@
           <div class="fc-table-wrap"><table class="fc-table"><thead><tr><th>Campaign</th><th>Coupon</th><th>Start</th><th>End</th><th>Send date/time</th><th>Status</th><th>Targeted</th><th>Sent</th><th>Actions</th></tr></thead><tbody id="campaigns-table"></tbody></table></div>
         </div>
 
+        <div id="email-infrastructure-panel" class="fc-card"></div>
         <div id="campaign-detail" class="fc-card" hidden></div>
       </section>
 

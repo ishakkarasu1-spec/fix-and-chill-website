@@ -26,7 +26,7 @@ body.fc-admin-body{margin:0;background:var(--fc-bg);color:var(--fc-ink);font:15p
 .fc-topline h1{margin:0;font-size:30px;line-height:1.15}
 .fc-topline a{color:var(--fc-primary);font-weight:800;text-decoration:none}
 .fc-card{background:var(--fc-surface);border:1px solid var(--fc-border);border-radius:8px;padding:18px;box-shadow:0 8px 22px rgba(15,23,42,.05)}
-.fc-section{display:none}
+.fc-section{display:block;scroll-margin-top:18px;margin-bottom:18px}
 .fc-section.active{display:block}
 .fc-grid{display:grid;gap:14px}
 .fc-grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -42,6 +42,8 @@ body.fc-admin-body{margin:0;background:var(--fc-bg);color:var(--fc-ink);font:15p
 .fc-form textarea{min-height:82px;resize:vertical}
 .fc-form .wide{grid-column:1 / -1}
 .fc-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.fc-inline-add{display:grid;grid-template-columns:auto minmax(180px,1fr) minmax(140px,180px) auto minmax(160px,1fr);gap:10px;align-items:center;padding:12px;border:1px dashed var(--fc-border);border-radius:8px;background:#f8fafc}
+.fc-inline-add strong{white-space:nowrap}
 .fc-btn{border:0;border-radius:8px;background:var(--fc-primary);color:#fff;padding:10px 13px;cursor:pointer;font-weight:800;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;min-height:40px}
 .fc-btn.secondary{background:#e8f2f3;color:#12464a}
 .fc-btn.accent{background:var(--fc-accent);color:#111}
@@ -79,6 +81,15 @@ body.fc-admin-body{margin:0;background:var(--fc-bg);color:var(--fc-ink);font:15p
 .fc-check-row input{width:auto}
 .fc-email-preview{white-space:pre-wrap;background:#f8fafc;border:1px solid var(--fc-border);border-radius:8px;padding:12px;max-height:280px;overflow:auto}
 .fc-filter-grid{display:grid;grid-template-columns:2fr repeat(3,1fr) auto;gap:10px;align-items:center}
+.fc-brochure-preview{border:1px solid var(--fc-border);border-radius:8px;overflow:hidden;background:#fff;min-height:180px}
+.fc-brochure-art{display:grid;grid-template-columns:1.1fr .9fr;min-height:220px;background:linear-gradient(135deg,#123f43 0%,#1f6e6f 55%,#f2b137 55%,#f2b137 100%);color:#fff}
+.fc-brochure-copy{padding:24px;display:grid;align-content:center;gap:8px}
+.fc-brochure-copy h4{font-size:28px;line-height:1.1;margin:0;color:#fff}
+.fc-brochure-copy p{margin:0}
+.fc-brochure-offer{display:inline-flex;width:max-content;border-radius:999px;background:#fff;color:#123f43;font-weight:900;padding:7px 12px}
+.fc-brochure-image{display:flex;align-items:center;justify-content:center;padding:18px}
+.fc-brochure-image img{max-width:100%;max-height:210px;border-radius:8px;background:#fff;object-fit:cover}
+.fc-brochure-placeholder{width:100%;min-height:160px;border:2px dashed rgba(255,255,255,.7);border-radius:8px;display:grid;place-items:center;text-align:center;font-weight:800;color:#fff;padding:16px}
 @media(max-width:900px){
   .fc-shell{display:block}
   .fc-sidebar{position:relative;height:auto}
@@ -86,6 +97,8 @@ body.fc-admin-body{margin:0;background:var(--fc-bg);color:var(--fc-ink);font:15p
   .fc-main{padding:18px}
   .fc-grid.two,.fc-grid.three,.fc-grid.four,.fc-form.two,.fc-form.three,.fc-result-grid{grid-template-columns:1fr}
   .fc-filter-grid{grid-template-columns:1fr}
+  .fc-brochure-art{grid-template-columns:1fr}
+  .fc-inline-add{grid-template-columns:1fr}
   .fc-checkbox-list{grid-template-columns:1fr}
   .fc-topline{align-items:flex-start;flex-direction:column}
 }
