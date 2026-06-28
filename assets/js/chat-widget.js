@@ -53,6 +53,15 @@
     return (data.partCategories.find(category => category.id === id) || {}).categoryName || '';
   }
 
+  function normalizeLookup(value){
+    return String(value || '')
+      .toLowerCase()
+      .replace(/\b(apple|samsung|google|motorola|oneplus|phone|cell|mobile)\b/g, ' ')
+      .replace(/[^a-z0-9]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
   function inferRepairCategory(issue){
     const text = String(issue || '').toLowerCase();
     if(/screen|glass|lcd|oled|display|crack/.test(text)) return 'Screen';
@@ -68,20 +77,21 @@
   }
 
   function inventoryCheck(data, deviceModel, issue){
-    const modelText = String(deviceModel || '').trim().toLowerCase().replace(/^samsung\s+|^apple\s+/i, '');
+    const modelText = normalizeLookup(deviceModel);
     const categoryText = inferRepairCategory(issue).toLowerCase();
     const matches = data.inventory.filter(item => {
-      const model = modelName(data, item.deviceModelId).toLowerCase();
+      const model = normalizeLookup(modelName(data, item.deviceModelId));
       const category = categoryName(data, item.partCategoryId).toLowerCase();
       const part = String(item.partName || '').toLowerCase();
-      return modelText && model.includes(modelText) && (category === categoryText || part.includes(categoryText) || categoryText === 'diagnostics' || categoryText === 'other');
+      const modelMatch = modelText && (model.includes(modelText) || modelText.includes(model));
+      return modelMatch && (category === categoryText || part.includes(categoryText) || categoryText === 'diagnostics' || categoryText === 'other');
     });
     const inStock = matches.find(item => Number(item.quantityInStock || 0) > 0);
     if(inStock){
       return {
         status:'in_stock',
         label:`In stock: ${inStock.quantityInStock}`,
-        message:`The ${inStock.partName} appears available in our inventory.`,
+        message:`The ${inStock.partName} appears available in inventory right now.`,
         partName:inStock.partName,
         price:inStock.sellingPrice || '',
         estimatedAvailability:'Available now'
@@ -92,7 +102,7 @@
       return {
         status:'out_of_stock',
         label:'Out of stock',
-        message:'That part is not currently in stock, but it can usually be ordered.',
+        message:'That part is listed in inventory, but the current stock is 0. It may need to be ordered, or the stock may need a technician to double-check it.',
         partName:item.partName,
         price:item.sellingPrice || '',
         estimatedAvailability:item.notes && /eta|arrival|shipping|day/i.test(item.notes) ? item.notes : supplierShippingEstimate()
@@ -101,7 +111,7 @@
     return {
       status:'not_found',
       label:'Part not found in inventory',
-      message:'I could not confirm that part in inventory. A technician will confirm availability.',
+      message:'I could not find a matching part in inventory. It may not have been added yet, so I will ask a technician to confirm availability before any appointment is approved.',
       partName:'',
       price:'',
       estimatedAvailability:'Unknown'
@@ -259,22 +269,31 @@
       const priceLine = conversation.inventoryResult.price && !risky
         ? ` The listed estimate is $${conversation.inventoryResult.price}, but final price can change after inspection.`
         : ' I will not promise a final price until a technician confirms the device and part condition.';
-      const scheduleLine = conversation.inventoryResult.status === 'in_stock'
-        ? withinWorkingHours(data.chatSettings)
-          ? ` You can request a time between ${data.chatSettings.workStart || '10:00'} and ${data.chatSettings.workEnd || '19:00'}, but the appointment is not confirmed until the owner approves it.`
-          : ' We are currently outside normal working hours. Please share your preferred time, and the owner will approve or suggest another time as soon as possible.'
-        : ` ${conversation.inventoryResult.estimatedAvailability && conversation.inventoryResult.estimatedAvailability !== 'Unknown' ? conversation.inventoryResult.estimatedAvailability : 'A technician will confirm availability.'}`;
+      let scheduleLine = '';
+      if(conversation.inventoryResult.status === 'in_stock'){
+        scheduleLine = withinWorkingHours(data.chatSettings)
+          ? ` The part appears available, so you can request a date and time between ${data.chatSettings.workStart || '10:00'} and ${data.chatSettings.workEnd || '19:00'}. The owner must approve the final appointment before it is confirmed.`
+          : ' The part appears available. We are outside normal working hours, but you can still request a date and time; the owner will approve or suggest another time.';
+      }else{
+        scheduleLine = ` ${conversation.inventoryResult.estimatedAvailability && conversation.inventoryResult.estimatedAvailability !== 'Unknown' ? conversation.inventoryResult.estimatedAvailability : 'A technician will confirm availability.'} I am going to ask a technician before giving an appointment because the part is not confirmed in stock.`;
+      }
       conversation.step = 'ask_address';
-      reply = `${conversation.inventoryResult.message}${priceLine}${scheduleLine} If the part is not in stock, I will ask the owner to confirm before giving any appointment. What ZIP code or address area are you in?`;
+      reply = `${conversation.inventoryResult.message}${priceLine}${scheduleLine} What ZIP code or address area are you in?`;
     }else if(conversation.step === 'ask_address'){
       c.address = userText.trim();
       conversation.step = 'ask_time';
-      reply = 'What appointment time do you prefer? This is a request only; the owner must approve the final appointment time.';
+      if(conversation.inventoryResult.status === 'in_stock'){
+        reply = `What date and time do you prefer? Please type something like "Monday 2 PM" or "June 30 at 11 AM". This is a request only; the owner must approve the final appointment time.`;
+      }else{
+        reply = 'What date and time would you prefer if the technician confirms the part is available? This is only a request; the owner must approve the part availability and appointment.';
+      }
     }else if(conversation.step === 'ask_time'){
       c.preferredTime = userText.trim();
       conversation.step = 'ready_to_book';
       conversation.summary = summaryFor(conversation);
-      reply = 'Thanks. I saved your request. A technician will review the details and confirm the appointment, price, and part availability before anything is guaranteed.';
+      reply = conversation.inventoryResult.status === 'in_stock'
+        ? 'Thanks. I saved your requested date/time. The part appears available, but the owner still needs to approve the final appointment and price before it is confirmed.'
+        : 'Thanks. I saved your requested date/time. I am sending this to a technician because the part is not confirmed in stock. The owner will confirm availability before approving an appointment.';
     }else{
       reply = 'Thanks. I added that to the conversation. A technician can review and follow up if needed.';
     }
