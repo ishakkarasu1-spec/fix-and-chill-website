@@ -9,7 +9,7 @@
 
   const repairStatuses = [
     'Booked','Item Ordered','Item Received','Waiting for Part','Device Received','In Repair','Ready for Pickup',
-    'Repair Completed','Delivered','Cancelled'
+    'Repair Completed','Delivered','Cancelled','Refunded'
   ];
   const orderStatuses = ['Not Ordered','Ordered','Shipped','Received','Cancelled'];
   const ticketPartStatuses = ['not_ordered','ordered','delivered','received_into_inventory','used_for_repair','cancelled'];
@@ -729,7 +729,7 @@
   function statusPill(status){
     const good = ['Received','Ready for Pickup','Repair Completed','Delivered','Item Received','Sent','AI Chatting'].includes(status) || String(status || '').startsWith('In Stock');
     const bad = ['Cancelled','Out of Stock','Closed'].includes(status);
-    const warn = ['Booked','Item Ordered','Ordered','Shipped','Draft','Scheduled','Expired','Needs Human Review','Technician Joined'].includes(status);
+    const warn = ['Booked','Item Ordered','Ordered','Shipped','Draft','Scheduled','Expired','Needs Human Review','Technician Joined','Refunded'].includes(status);
     return `<span class="fc-pill ${good ? 'good' : bad ? 'bad' : warn ? 'warn' : ''}">${escapeHtml(status || '')}</span>`;
   }
 
@@ -1058,7 +1058,7 @@
     }
 
     function renderDashboard(){
-      const activeRepairs = data.tickets.filter(ticket => !['Repair Completed','Delivered','Cancelled'].includes(ticket.status)).length;
+      const activeRepairs = data.tickets.filter(ticket => !['Repair Completed','Delivered','Cancelled','Refunded'].includes(ticket.status)).length;
       const waiting = data.tickets.filter(ticket => ['Item Ordered'].includes(ticket.status)).length;
       const received = data.orders.filter(order => order.status === 'Received' && !order.installedApplied).length;
       const ready = data.tickets.filter(ticket => ticket.status === 'Ready for Pickup').length;
@@ -1350,7 +1350,7 @@
       if($('#ticket-net-paid')) $('#ticket-net-paid').value = calculated.netPaid.toFixed(2);
       if($('#ticket-balance-due')) $('#ticket-balance-due').value = calculated.balanceDue.toFixed(2);
       if(message){
-        const completedStatus = ['Repair Completed','Delivered'].includes(normalizeTicketStatus(values.status));
+        const completedStatus = ['Repair Completed','Delivered','Refunded'].includes(normalizeTicketStatus(values.status));
         if(refundType === 'None'){
           message.className = 'wide fc-alert good';
           message.textContent = `No refund selected. Paid after refunds is the actual money kept so far: $${calculated.netPaid.toFixed(2)}.`;
@@ -1375,7 +1375,7 @@
       if(!form) return;
       const values = formToObject(form);
       const calculated = calculateTicketPayments(values);
-      if(['Repair Completed','Delivered'].includes(normalizeTicketStatus(values.status)) && calculated.balanceDue > 0){
+      if(['Repair Completed','Delivered','Refunded'].includes(normalizeTicketStatus(values.status)) && calculated.balanceDue > 0){
         const paymentBox = $('#ticket-payment-box');
         if(paymentBox){
           paymentBox.classList.add('fc-attention');
@@ -1531,7 +1531,7 @@
         values.deviceBrand = brandName(data, values.brandId);
         values.deviceModel = modelName(data, values.deviceModelId);
         Object.assign(ticket, values);
-        ticket.completedAt = ['Repair Completed','Delivered'].includes(ticket.status) ? (ticket.completedAt || today()) : '';
+        ticket.completedAt = ['Repair Completed','Delivered','Refunded'].includes(ticket.status) ? (ticket.completedAt || today()) : '';
         syncTicketSelectedPart(data, ticket, selectedInventoryItem, selectedRepairCategory, repairQuantity, values.useInventoryNow);
         queueRepairEmailNotification(data, ticket);
       }else{
@@ -1539,7 +1539,7 @@
         values.deviceModel = modelName(data, values.deviceModelId);
         values.ticketNumber = `FC-${data.nextTicket++}`;
         values.createdAt = today();
-        values.completedAt = ['Repair Completed','Delivered'].includes(values.status) ? today() : '';
+        values.completedAt = ['Repair Completed','Delivered','Refunded'].includes(values.status) ? today() : '';
         const ticket = Object.assign({id:uid()}, values);
         data.tickets.push(ticket);
         syncTicketSelectedPart(data, ticket, selectedInventoryItem, selectedRepairCategory, repairQuantity, values.useInventoryNow);
