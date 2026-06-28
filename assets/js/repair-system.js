@@ -3,6 +3,7 @@
 
   const STORE_KEY = 'fixChillRepairManager.v1';
   const SESSION_KEY = 'fixChillAdminSession';
+  const REMEMBER_KEY = 'fixChillAdminRememberUntil';
   const ADMIN_EMAIL = 'owner@fixandchill.local';
   const ADMIN_PASSWORD = 'FixChill2026!';
 
@@ -57,6 +58,8 @@
   const money = value => value === '' || value == null ? '' : Number(value).toFixed(2);
   const toMoneyNumber = value => Math.max(0, Number(value || 0) || 0);
   const slug = value => String(value || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || uid();
+  const normalizePhone = value => String(value || '').replace(/\D/g, '');
+  const normalizeEmail = value => String(value || '').trim().toLowerCase();
 
   function defaultBrands(){
     return defaultBrandNames.map(name => ({id:`brand-${slug(name)}`, brandName:name}));
@@ -200,6 +203,16 @@
     }
     const paymentMethod = values.paymentMethod || (existingTicket ? existingTicket.paymentMethod : '') || '';
     values.paymentHistory = existingTicket && Array.isArray(existingTicket.paymentHistory) ? existingTicket.paymentHistory.slice() : [];
+    if(!existingTicket && toMoneyNumber(values.amountPaid) > 0 && !newPaymentAmount){
+      values.paymentHistory.push({
+        id:uid(),
+        amount:toMoneyNumber(values.amountPaid).toFixed(2),
+        method:paymentMethod || 'Not specified',
+        type:values.paymentType || 'Payment',
+        note:values.refundNotes || '',
+        paidAt:new Date().toISOString()
+      });
+    }
     if(newPaymentAmount > 0){
       values.amountPaid = (savedAmountPaid ? savedAmountPaid + newPaymentAmount : toMoneyNumber(values.amountPaid) + newPaymentAmount).toFixed(2);
       values.paymentMethod = paymentMethod;
@@ -906,6 +919,12 @@
     let campaignTimer = null;
 
     function signedIn(){
+      const rememberUntil = Number(localStorage.getItem(REMEMBER_KEY) || 0);
+      if(rememberUntil && Date.now() < rememberUntil){
+        sessionStorage.setItem(SESSION_KEY, 'yes');
+        return true;
+      }
+      if(rememberUntil && Date.now() >= rememberUntil) localStorage.removeItem(REMEMBER_KEY);
       return sessionStorage.getItem(SESSION_KEY) === 'yes';
     }
 
@@ -927,6 +946,11 @@
       const password = $('#admin-password').value;
       if(email === ADMIN_EMAIL && password === ADMIN_PASSWORD){
         sessionStorage.setItem(SESSION_KEY, 'yes');
+        if($('#remember-admin-login') && $('#remember-admin-login').checked){
+          localStorage.setItem(REMEMBER_KEY, String(Date.now() + 15 * 24 * 60 * 60 * 1000));
+        }else{
+          localStorage.removeItem(REMEMBER_KEY);
+        }
         $('#login-error').hidden = true;
         showApp();
       }else{
@@ -936,6 +960,7 @@
 
     $('.fc-logout').addEventListener('click', () => {
       sessionStorage.removeItem(SESSION_KEY);
+      localStorage.removeItem(REMEMBER_KEY);
       showApp();
     });
 
@@ -964,13 +989,29 @@
       renderChatInbox();
       renderCampaigns();
       renderSearch();
+      renderPaymentHistory();
       populateAllSelects();
       updateTicketPaymentFields();
       updateTicketStockPreview();
     }
 
     function populateAllSelects(){
-      populateSelect($('#ticket-customer'), data.customers, customer => customer.id, customerLabel, $('#ticket-customer').value);
+      const ticketCustomerQuery = $('#ticket-customer-search') ? $('#ticket-customer-search').value.toLowerCase() : '';
+      const matchingTicketCustomers = data.customers.filter(customer => !ticketCustomerQuery || [customer.fullName, customer.phone, customer.email].join(' ').toLowerCase().includes(ticketCustomerQuery));
+      let ticketCustomers = matchingTicketCustomers.slice(0, 5);
+      const selectedTicketCustomer = $('#ticket-customer') ? $('#ticket-customer').value : '';
+      if(selectedTicketCustomer && !ticketCustomers.some(customer => customer.id === selectedTicketCustomer)){
+        const selectedCustomer = customerById(data, selectedTicketCustomer);
+        if(selectedCustomer) ticketCustomers = [selectedCustomer].concat(ticketCustomers).slice(0, 5);
+      }
+      populateSelect($('#ticket-customer'), ticketCustomers, customer => customer.id, customerLabel, selectedTicketCustomer);
+      if($('#ticket-customer-search-message')){
+        $('#ticket-customer-search-message').textContent = matchingTicketCustomers.length > 5
+          ? `Showing first 5 of ${matchingTicketCustomers.length} matches. Keep typing to narrow the list.`
+          : matchingTicketCustomers.length
+            ? `Showing ${matchingTicketCustomers.length} matching customer${matchingTicketCustomers.length === 1 ? '' : 's'}.`
+            : 'No matching customer found. Add the customer first if this is a new customer.';
+      }
       populateSelect($('#ticket-brand'), data.brands, brand => brand.id, brand => brand.brandName, $('#ticket-brand').value);
       populateModelsForBrand($('#ticket-model'), data, $('#ticket-brand').value, $('#ticket-model').value, $('#ticket-model-search') ? $('#ticket-model-search').value : '');
       populatePlainSelect($('#ticket-new-model-type'), deviceTypes, $('#ticket-new-model-type') ? $('#ticket-new-model-type').value || 'Phone' : 'Phone');
@@ -1045,8 +1086,8 @@
       return customers.map(customer => `
         <tr>
           <td><strong>${escapeHtml(customer.fullName)}</strong></td>
-          <td>${escapeHtml(customer.phone)}</td>
-          <td>${escapeHtml(customer.email)}</td>
+          <td>${customer.phone ? `<button class="fc-link-btn" type="button" data-use-customer="${customer.id}">${escapeHtml(customer.phone)}</button>` : '<span class="fc-muted">No phone</span>'}</td>
+          <td>${customer.email ? `<button class="fc-link-btn" type="button" data-use-customer="${customer.id}">${escapeHtml(customer.email)}</button>` : '<span class="fc-muted">No email</span>'}</td>
           <td>
             ${customer.emailConsent === 'yes' ? statusPill('Email yes') : statusPill('Email no')}
             ${customer.smsConsent === 'yes' ? statusPill('SMS yes') : ''}
@@ -1068,10 +1109,57 @@
       $('#customers-table').innerHTML = customerRows(customers);
     }
 
+    function customerDuplicateMatches(values){
+      const phone = normalizePhone(values.phone);
+      const email = normalizeEmail(values.email);
+      if(!phone && !email) return [];
+      return data.customers.filter(customer => {
+        if(editing.customer && customer.id === editing.customer) return false;
+        const samePhone = phone && normalizePhone(customer.phone) === phone;
+        const sameEmail = email && normalizeEmail(customer.email) === email;
+        return samePhone || sameEmail;
+      });
+    }
+
+    function renderCustomerDuplicateWarning(){
+      const warning = $('#customer-duplicate-warning');
+      if(!warning) return;
+      const values = formToObject($('#customer-form'));
+      const matches = customerDuplicateMatches(values);
+      if(!matches.length){
+        warning.hidden = true;
+        warning.innerHTML = '';
+        return;
+      }
+      warning.className = 'wide fc-alert bad';
+      warning.innerHTML = `
+        <strong>Possible duplicate customer found.</strong>
+        <p>This phone number or email already exists. Use the existing customer instead of creating a duplicate when possible.</p>
+        <div class="fc-actions">
+          ${matches.slice(0, 5).map(customer => `<button class="fc-btn secondary" type="button" data-use-customer="${customer.id}">${escapeHtml(customer.fullName)} ${customer.phone ? `- ${escapeHtml(customer.phone)}` : ''} ${customer.email ? `- ${escapeHtml(customer.email)}` : ''}</button>`).join('')}
+        </div>`;
+      warning.hidden = false;
+    }
+
+    function startEditCustomer(customerId){
+      const customer = customerById(data, customerId);
+      if(!customer) return;
+      editing.customer = customerId;
+      fillForm($('#customer-form'), customer);
+      $('#customer-submit').textContent = 'Update Customer';
+      renderCustomerDuplicateWarning();
+      $('#customer-form').scrollIntoView({behavior:'smooth', block:'start'});
+    }
+
     $('#customer-form').addEventListener('submit', event => {
       event.preventDefault();
       data = loadData();
       const values = formToObject(event.currentTarget);
+      const duplicates = customerDuplicateMatches(values);
+      if(duplicates.length && !confirm('This phone or email already exists for another customer. Save as a separate customer anyway?')){
+        renderCustomerDuplicateWarning();
+        return;
+      }
       if(editing.customer){
         Object.assign(customerById(data, editing.customer), values);
       }else{
@@ -1081,6 +1169,7 @@
       editing.customer = null;
       $('#customer-submit').textContent = 'Add Customer';
       event.currentTarget.reset();
+      renderCustomerDuplicateWarning();
       render();
     });
 
@@ -1088,9 +1177,19 @@
       editing.customer = null;
       $('#customer-submit').textContent = 'Add Customer';
       $('#customer-form').reset();
+      renderCustomerDuplicateWarning();
     });
 
     $('#customer-search').addEventListener('input', renderCustomers);
+    ['phone','email'].forEach(name => {
+      const field = $('#customer-form').elements[name];
+      if(field) field.addEventListener('input', renderCustomerDuplicateWarning);
+      if(field) field.addEventListener('change', renderCustomerDuplicateWarning);
+    });
+    if($('#ticket-customer-search')) $('#ticket-customer-search').addEventListener('input', () => {
+      data = loadData();
+      populateAllSelects();
+    });
 
     function ticketRows(tickets){
       if(!tickets.length) return '<tr><td colspan="13">No repair tickets yet.</td></tr>';
@@ -1116,6 +1215,53 @@
           </td>
         </tr>`;
       }).join('');
+    }
+
+    function paymentHistoryEntries(){
+      return data.tickets.flatMap(ticket => {
+        const customer = customerById(data, ticket.customerId);
+        const history = Array.isArray(ticket.paymentHistory) ? ticket.paymentHistory.slice() : [];
+        const historyTotal = history.reduce((sum, payment) => sum + toMoneyNumber(payment.amount), 0);
+        const payment = calculateTicketPayments(ticket);
+        const entries = history.map(item => Object.assign({
+          ticketNumber:ticket.ticketNumber,
+          customerName:fullName(customer),
+          fallbackMethod:ticket.paymentMethod || '',
+          fallbackType:ticket.paymentType || 'Payment'
+        }, item));
+        const missingPaid = Math.max(0, payment.amountPaid - historyTotal);
+        if(missingPaid > 0.005){
+          entries.unshift({
+            id:`existing-${ticket.id}`,
+            ticketNumber:ticket.ticketNumber,
+            customerName:fullName(customer),
+            type:ticket.paymentType || 'Existing payment/deposit',
+            amount:missingPaid.toFixed(2),
+            method:ticket.paymentMethod || 'Not specified',
+            note:ticket.refundNotes || '',
+            paidAt:ticket.createdAt || '',
+            fallbackMethod:ticket.paymentMethod || '',
+            fallbackType:ticket.paymentType || 'Payment'
+          });
+        }
+        return entries;
+      }).sort((a, b) => String(b.paidAt || '').localeCompare(String(a.paidAt || '')));
+    }
+
+    function renderPaymentHistory(){
+      const table = $('#payment-history-table');
+      if(!table) return;
+      const entries = paymentHistoryEntries();
+      table.innerHTML = entries.length ? entries.map(entry => `
+        <tr>
+          <td>${escapeHtml(String(entry.paidAt || '').slice(0, 19).replace('T', ' '))}</td>
+          <td><strong>${escapeHtml(entry.ticketNumber)}</strong></td>
+          <td>${escapeHtml(entry.customerName)}</td>
+          <td>${escapeHtml(entry.type || entry.fallbackType || 'Payment')}</td>
+          <td><strong>$${money(entry.amount)}</strong></td>
+          <td>${escapeHtml(entry.method || entry.fallbackMethod || 'Not specified')}</td>
+          <td>${escapeHtml(entry.note || '')}</td>
+        </tr>`).join('') : '<tr><td colspan="7">No payments recorded yet.</td></tr>';
     }
 
     function renderTickets(){
@@ -2273,18 +2419,18 @@
     document.addEventListener('click', event => {
       const target = event.target;
       data = loadData();
-      const customerId = target.dataset.editCustomer || target.dataset.deleteCustomer;
+      const customerId = target.dataset.editCustomer || target.dataset.deleteCustomer || target.dataset.useCustomer;
       const ticketId = target.dataset.editTicket || target.dataset.deleteTicket;
       const ticketPartId = target.dataset.ticketPart || target.dataset.editTicketPart;
       const orderId = target.dataset.editOrder || target.dataset.deleteOrder || target.dataset.installOrder;
       const inventoryId = target.dataset.editInventory || target.dataset.deleteInventory;
       const campaignId = target.dataset.viewCampaign || target.dataset.editCampaign || target.dataset.cancelCampaign || target.dataset.deleteCampaign;
       const chatId = target.dataset.openChat || target.dataset.takeoverChat || target.dataset.returnAiChat || target.dataset.closeChat;
-      if(target.dataset.editCustomer){
-        editing.customer = customerId;
-        fillForm($('#customer-form'), customerById(data, customerId));
-        $('#customer-submit').textContent = 'Update Customer';
-        window.scrollTo({top:0, behavior:'smooth'});
+      if(target.dataset.editCustomer || target.dataset.useCustomer){
+        current = 'customers';
+        render();
+        data = loadData();
+        startEditCustomer(customerId);
       }
       if(target.dataset.deleteCustomer && confirm('Delete this customer and their tickets/orders?')){
         const ticketIds = data.tickets.filter(ticket => ticket.customerId === customerId).map(ticket => ticket.id);
