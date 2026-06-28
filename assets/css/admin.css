@@ -27,7 +27,7 @@ body.fc-admin-body{margin:0;background:var(--fc-bg);color:var(--fc-ink);font:15p
 .fc-topline h1{margin:0;font-size:30px;line-height:1.15}
 .fc-topline a{color:var(--fc-primary);font-weight:800;text-decoration:none}
 .fc-card{background:var(--fc-surface);border:1px solid var(--fc-border);border-radius:8px;padding:18px;box-shadow:0 8px 22px rgba(15,23,42,.05)}
-.fc-section{display:block;scroll-margin-top:18px;margin-bottom:18px}
+.fc-section{display:none;scroll-margin-top:18px;margin-bottom:18px}
 .fc-section.active{display:block}
 .fc-grid{display:grid;gap:14px}
 .fc-grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -63,6 +63,8 @@ body.fc-admin-body{margin:0;background:var(--fc-bg);color:var(--fc-ink);font:15p
 .fc-pill.good{background:#dcfce7;color:#166534}
 .fc-pill.bad{background:#fee2e2;color:#991b1b}
 .fc-muted{color:var(--fc-muted)}
+.fc-balance-due{display:inline-block;margin-top:4px;color:var(--fc-danger);font-weight:900}
+.fc-balance-paid{display:inline-block;margin-top:4px;color:var(--fc-good);font-weight:900}
 .fc-stack{display:grid;gap:16px}
 .fc-alert{padding:11px 12px;border-radius:8px;background:#fff7db;border:1px solid #f4d57b;color:#583b00}
 .fc-alert.good{background:#e8fff2;border-color:#9be4b7;color:#105530}

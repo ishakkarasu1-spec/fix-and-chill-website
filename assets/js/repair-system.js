@@ -25,6 +25,7 @@
   const defaultPartCategoryNames = ['Screen','Battery','Charging Port','Back Glass','Front Camera','Rear Camera','Speaker','Earpiece Speaker','Microphone','Housing','Flex Cable','Face ID Parts','Buttons','SIM Tray','Adhesive','Other'];
   const deviceTypes = ['Phone','Tablet','Laptop','Game Console'];
   const qualityTypes = ['Aftermarket','Premium','Soft OLED','Hard OLED','Original Pull','Refurbished','OEM','Genuine'];
+  const paymentMethods = ['','Cash','Credit/Debit Card','Venmo','Zelle','Other'];
   const campaignStatuses = ['Draft','Scheduled','Sent','Cancelled','Expired'];
   const discountTypes = ['Percentage','Fixed amount','Free diagnostic','Custom offer'];
   const targetTypes = [
@@ -170,16 +171,37 @@
 
   function calculateTicketPayments(ticket){
     const finalPrice = toMoneyNumber(ticket.finalPrice);
-    const amountPaid = toMoneyNumber(ticket.amountPaid);
+    const amountPaid = toMoneyNumber(ticket.amountPaid) + toMoneyNumber(ticket.newPaymentAmount);
     const refundType = ticket.refundType || 'None';
     let refundAmount = toMoneyNumber(ticket.refundAmount);
     if(refundType === 'None') refundAmount = 0;
+    if(refundType === 'Deposit refund' && !refundAmount) refundAmount = amountPaid;
     if(refundType === 'Full refund') refundAmount = amountPaid || finalPrice;
     refundAmount = Math.min(refundAmount, amountPaid || finalPrice);
-    const adjustedTotal = refundType === 'Full refund' ? 0 : Math.max(0, finalPrice - refundAmount);
+    const adjustedTotal = ['Full refund','Deposit refund'].includes(refundType) ? 0 : Math.max(0, finalPrice - refundAmount);
     const netPaid = Math.max(0, amountPaid - refundAmount);
     const balanceDue = Math.max(0, adjustedTotal - netPaid);
     return {amountPaid, refundType, refundAmount, netPaid, balanceDue};
+  }
+
+  function prepareTicketPaymentSave(values, existingTicket){
+    const newPaymentAmount = toMoneyNumber(values.newPaymentAmount);
+    const paymentMethod = values.paymentMethod || (existingTicket ? existingTicket.paymentMethod : '') || '';
+    values.paymentHistory = existingTicket && Array.isArray(existingTicket.paymentHistory) ? existingTicket.paymentHistory.slice() : [];
+    if(newPaymentAmount > 0){
+      values.amountPaid = (toMoneyNumber(values.amountPaid) + newPaymentAmount).toFixed(2);
+      values.paymentMethod = paymentMethod;
+      values.paymentHistory.push({
+        id:uid(),
+        amount:newPaymentAmount.toFixed(2),
+        method:paymentMethod || 'Not specified',
+        type:values.paymentType || 'Balance payment',
+        note:values.refundNotes || '',
+        paidAt:new Date().toISOString()
+      });
+    }
+    values.newPaymentAmount = '';
+    return values;
   }
 
   function applyTicketPayments(ticket){
@@ -401,6 +423,9 @@
       ticket.status = normalizeTicketStatus(ticket.status);
       ticket.refundType = ticket.refundType || 'None';
       ticket.amountPaid = ticket.amountPaid || '';
+      ticket.paymentMethod = ticket.paymentMethod || '';
+      ticket.paymentHistory = Array.isArray(ticket.paymentHistory) ? ticket.paymentHistory : [];
+      ticket.newPaymentAmount = '';
       ticket.refundAmount = ticket.refundAmount || '0.00';
       ticket.refundNotes = ticket.refundNotes || '';
       applyTicketPayments(ticket);
@@ -575,16 +600,20 @@
   }
 
   function inventoryPartLabel(data, item){
-    return `${item.partName} - ${item.qualityType || 'Standard'} - ${item.quantityInStock} in stock`;
+    const qty = Number(item.quantityInStock || 0);
+    return `${item.partName} - ${item.qualityType || 'Standard'} - ${qty > 0 ? `${qty} in stock` : 'OUT OF STOCK'}`;
   }
 
-  function compatibleInventoryParts(data, ticketOrModelId, categoryId){
+  function compatibleInventoryParts(data, ticketOrModelId, categoryId, includeOutOfStock=false){
     const modelId = typeof ticketOrModelId === 'string' ? ticketOrModelId : ticketOrModelId && ticketOrModelId.deviceModelId;
     return data.inventory.filter(item =>
       item.deviceModelId === modelId &&
       (!categoryId || item.partCategoryId === categoryId) &&
-      Number(item.quantityInStock || 0) > 0
-    );
+      (includeOutOfStock || Number(item.quantityInStock || 0) > 0)
+    ).sort((a, b) => {
+      const stockSort = Number(b.quantityInStock || 0) - Number(a.quantityInStock || 0);
+      return stockSort || [categoryName(data, a.partCategoryId), a.partName].join('|').localeCompare([categoryName(data, b.partCategoryId), b.partName].join('|'));
+    });
   }
 
   function findInventoryForOrder(data, order){
@@ -924,6 +953,7 @@
       renderSearch();
       populateAllSelects();
       updateTicketPaymentFields();
+      updateTicketStockPreview();
     }
 
     function populateAllSelects(){
@@ -931,6 +961,9 @@
       populateSelect($('#ticket-brand'), data.brands, brand => brand.id, brand => brand.brandName, $('#ticket-brand').value);
       populateModelsForBrand($('#ticket-model'), data, $('#ticket-brand').value, $('#ticket-model').value, $('#ticket-model-search') ? $('#ticket-model-search').value : '');
       populatePlainSelect($('#ticket-new-model-type'), deviceTypes, $('#ticket-new-model-type') ? $('#ticket-new-model-type').value || 'Phone' : 'Phone');
+      populatePlainSelect($('#ticket-payment-method'), paymentMethods, $('#ticket-payment-method') ? $('#ticket-payment-method').value : '');
+      populateSelect($('#ticket-repair-category'), data.partCategories, category => category.id, category => category.categoryName, $('#ticket-repair-category') ? $('#ticket-repair-category').value : '');
+      populateSelect($('#ticket-inventory-part'), compatibleInventoryParts(data, $('#ticket-model') ? $('#ticket-model').value : '', $('#ticket-repair-category') ? $('#ticket-repair-category').value : '', true), item => item.id, item => inventoryPartLabel(data, item), $('#ticket-inventory-part') ? $('#ticket-inventory-part').value : '');
       populateSelect($('#order-ticket'), data.tickets, ticket => ticket.id, ticketLabel, $('#order-ticket').value);
       populateSelect($('#order-brand'), data.brands, brand => brand.id, brand => brand.brandName, $('#order-brand').value);
       populateModelsForBrand($('#order-device-model'), data, $('#order-brand').value, $('#order-device-model').value);
@@ -1060,7 +1093,7 @@
           <td>${escapeHtml(ticket.estimatedCompletion)}</td>
           <td>$${money(ticket.estimatedPrice)}</td>
           <td>$${money(ticket.finalPrice)}</td>
-          <td>${escapeHtml(ticket.paymentType || 'No payment collected')}<br>$${money(payment.amountPaid)}</td>
+          <td>${escapeHtml(ticket.paymentType || 'No payment collected')}<br>$${money(payment.amountPaid)}${ticket.paymentMethod ? `<br><span class="fc-muted">${escapeHtml(ticket.paymentMethod)}</span>` : ''}<br><span class="${payment.balanceDue > 0 ? 'fc-balance-due' : 'fc-balance-paid'}">Balance: $${money(payment.balanceDue)}</span></td>
           <td>${escapeHtml(payment.refundType)}<br>$${money(payment.refundAmount)}</td>
           <td>$${money(payment.netPaid)}</td>
           <td>${escapeHtml(ticket.createdAt)}</td>
@@ -1151,14 +1184,101 @@
       const values = formToObject(form);
       const refundType = values.refundType || 'None';
       const refundInput = $('#ticket-refund-amount');
-      if(refundInput) refundInput.readOnly = refundType !== 'Partial refund';
+      if(refundInput) refundInput.readOnly = !['Partial refund','Deposit refund'].includes(refundType);
       const calculated = calculateTicketPayments(values);
       if(refundInput) refundInput.value = calculated.refundAmount.toFixed(2);
       if($('#ticket-net-paid')) $('#ticket-net-paid').value = calculated.netPaid.toFixed(2);
       if($('#ticket-balance-due')) $('#ticket-balance-due').value = calculated.balanceDue.toFixed(2);
     }
 
-    ['finalPrice','amountPaid','refundAmount','refundType'].forEach(name => {
+    function updateTicketStockPreview(){
+      const message = $('#ticket-stock-message');
+      if(!message) return;
+      const modelId = $('#ticket-model') ? $('#ticket-model').value : '';
+      const categoryId = $('#ticket-repair-category') ? $('#ticket-repair-category').value : '';
+      const partId = $('#ticket-inventory-part') ? $('#ticket-inventory-part').value : '';
+      const qtyNeeded = Math.max(1, Number($('#ticket-repair-quantity') ? $('#ticket-repair-quantity').value || 1 : 1));
+      const modelText = modelName(data, modelId);
+      const categoryText = categoryName(data, categoryId);
+      if(!modelId || !categoryId){
+        message.hidden = true;
+        return;
+      }
+      const matches = compatibleInventoryParts(data, modelId, categoryId, true);
+      if(!matches.length){
+        message.className = 'wide fc-alert bad';
+        message.textContent = `${modelText} ${categoryText}: No matching inventory part found. You can still create this ticket and add/order the part later.`;
+        message.hidden = false;
+        return;
+      }
+      const item = data.inventory.find(entry => entry.id === partId) || matches[0];
+      const qty = Number(item.quantityInStock || 0);
+      const lowAlert = Number(item.lowStockAlertQuantity || 0);
+      if($('#ticket-inventory-part') && !$('#ticket-inventory-part').value) $('#ticket-inventory-part').value = item.id;
+      if(qty <= 0){
+        message.className = 'wide fc-alert bad';
+        message.textContent = `${item.partName} is OUT OF STOCK for ${modelText}. Ticket can still be created, but order/receive the part before using inventory.`;
+      }else if(qty < qtyNeeded){
+        message.className = 'wide fc-alert bad';
+        message.textContent = `${item.partName} has only ${qty} in stock, but ${qtyNeeded} is needed. Inventory cannot go negative.`;
+      }else if(qty <= lowAlert){
+        message.className = 'wide fc-alert';
+        message.textContent = `${item.partName} is available (${qty}), but this is at/below the low stock alert.`;
+      }else{
+        message.className = 'wide fc-alert good';
+        message.textContent = `${item.partName} is available for ${modelText}. Current stock: ${qty}.`;
+      }
+      message.hidden = false;
+    }
+
+    function syncTicketSelectedPart(data, ticket, item, repairCategory, quantity, useNow){
+      if(!ticket || (!item && !repairCategory)) return {ok:true};
+      const qty = Math.max(1, Number(quantity || 1));
+      let result = {ok:true};
+      if(useNow === 'yes' && item){
+        result = installInventoryPart(data, item, ticket, qty);
+        if(!result.ok) return result;
+        ticket.status = ticket.status === 'Booked' ? 'In Repair' : ticket.status;
+      }
+      const existing = item ? data.ticketParts.find(part => part.ticketId === ticket.id && part.inventoryItemId === item.id) : null;
+      const stockQty = item ? Number(item.quantityInStock || 0) : 0;
+      const partRecord = {
+        ticketId:ticket.id,
+        ticketNumber:ticket.ticketNumber,
+        inventoryItemId:item ? item.id : '',
+        partName:item ? item.partName : repairCategory,
+        deviceModel:ticket.deviceModel || modelName(data, ticket.deviceModelId),
+        repairType:repairCategory || (item ? categoryName(data, item.partCategoryId) : ''),
+        quantityNeeded:qty,
+        quantityReceived:item && stockQty > 0 ? qty : 0,
+        quantityUsed:useNow === 'yes' ? qty : 0,
+        supplierName:item ? item.vendor || '' : '',
+        supplierSku:item ? item.sku || '' : '',
+        estimatedCost:item ? item.costPrice || '' : '',
+        actualCost:item ? item.costPrice || '' : '',
+        orderNumber:'',
+        trackingNumber:'',
+        partStatus:useNow === 'yes' ? 'used_for_repair' : item && stockQty > 0 ? 'received_into_inventory' : 'not_ordered',
+        notes:item && stockQty <= 0 ? 'Selected from inventory list, but stock is 0. Order/receive before repair.' : 'Added from repair ticket form.',
+        updatedAt:new Date().toISOString(),
+        usedAt:useNow === 'yes' ? today() : '',
+        receivedAt:item && stockQty > 0 ? today() : ''
+      };
+      if(existing){
+        Object.assign(existing, partRecord);
+      }else{
+        data.ticketParts.push(Object.assign({
+          id:uid(),
+          supplierId:'',
+          createdAt:new Date().toISOString(),
+          orderedAt:'',
+          deliveredAt:''
+        }, partRecord));
+      }
+      return result;
+    }
+
+    ['finalPrice','amountPaid','newPaymentAmount','refundAmount','refundType','paymentMethod'].forEach(name => {
       const field = $('#ticket-form').elements[name];
       if(field) field.addEventListener('input', updateTicketPaymentFields);
       if(field) field.addEventListener('change', updateTicketPaymentFields);
@@ -1168,6 +1288,23 @@
       event.preventDefault();
       data = loadData();
       const values = formToObject(event.currentTarget);
+      const existingTicket = editing.ticket ? ticketById(data, editing.ticket) : null;
+      const selectedInventoryItem = data.inventory.find(entry => entry.id === values.selectedInventoryPartId);
+      const selectedRepairCategory = categoryName(data, values.repairCategoryId);
+      const repairQuantity = Math.max(1, Number(values.repairQuantity || 1));
+      if(values.useInventoryNow === 'yes' && (!selectedInventoryItem || Number(selectedInventoryItem.quantityInStock || 0) < repairQuantity)){
+        const stockMessage = $('#ticket-stock-message');
+        if(stockMessage){
+          stockMessage.className = 'wide fc-alert bad';
+          stockMessage.textContent = selectedInventoryItem ? `Cannot use ${selectedInventoryItem.partName}. Stock is ${selectedInventoryItem.quantityInStock || 0}, quantity needed is ${repairQuantity}.` : 'Choose an inventory part before using stock.';
+          stockMessage.hidden = false;
+        }
+        return;
+      }
+      if(selectedRepairCategory && !String(values.problem || '').toLowerCase().includes(selectedRepairCategory.toLowerCase())){
+        values.problem = `${selectedRepairCategory}${values.problem ? ` - ${values.problem}` : ''}`;
+      }
+      prepareTicketPaymentSave(values, existingTicket);
       applyTicketPayments(values);
       values.status = normalizeTicketStatus(values.status);
       const selectedCustomer = customerById(data, values.customerId);
@@ -1179,6 +1316,7 @@
         values.deviceModel = modelName(data, values.deviceModelId);
         Object.assign(ticket, values);
         ticket.completedAt = ['Repair Completed','Delivered'].includes(ticket.status) ? (ticket.completedAt || today()) : '';
+        syncTicketSelectedPart(data, ticket, selectedInventoryItem, selectedRepairCategory, repairQuantity, values.useInventoryNow);
         queueRepairEmailNotification(data, ticket);
       }else{
         values.deviceBrand = brandName(data, values.brandId);
@@ -1188,6 +1326,7 @@
         values.completedAt = ['Repair Completed','Delivered'].includes(values.status) ? today() : '';
         const ticket = Object.assign({id:uid()}, values);
         data.tickets.push(ticket);
+        syncTicketSelectedPart(data, ticket, selectedInventoryItem, selectedRepairCategory, repairQuantity, values.useInventoryNow);
         queueRepairEmailNotification(data, ticket);
       }
       saveData(data);
@@ -1195,6 +1334,7 @@
       $('#ticket-submit').textContent = 'Create Ticket';
       event.currentTarget.reset();
       $('#ticket-status').value = 'Booked';
+      if($('#ticket-new-payment-amount')) $('#ticket-new-payment-amount').value = '';
       updateTicketPaymentFields();
       render();
     });
@@ -1204,6 +1344,7 @@
       $('#ticket-submit').textContent = 'Create Ticket';
       $('#ticket-form').reset();
       $('#ticket-status').value = 'Booked';
+      if($('#ticket-new-payment-amount')) $('#ticket-new-payment-amount').value = '';
       updateTicketPaymentFields();
     });
 
@@ -1431,6 +1572,45 @@
       }).join('');
     }
 
+    function renderModelStockCheck(){
+      const table = $('#model-stock-table');
+      const summary = $('#model-stock-summary');
+      const input = $('#model-stock-search');
+      if(!table || !summary || !input) return;
+      const query = input.value.toLowerCase().trim();
+      if(!query){
+        summary.className = 'fc-alert';
+        summary.textContent = 'Type a model name to see all saved inventory parts for that device.';
+        table.innerHTML = '<tr><td colspan="8">No model searched yet.</td></tr>';
+        return;
+      }
+      const normalizedQuery = query.replace(/^apple\s+|^samsung\s+|^google\s+|^motorola\s+|^oneplus\s+/i, '').trim();
+      const items = data.inventory.filter(item => {
+        const model = modelName(data, item.deviceModelId).toLowerCase();
+        const brand = brandName(data, item.brandId).toLowerCase();
+        const haystack = [brand, model, `${brand} ${model}`, item.partName, categoryName(data, item.partCategoryId), item.qualityType, item.sku, item.vendor].join(' ').toLowerCase();
+        return haystack.includes(query) || (normalizedQuery && model.includes(normalizedQuery));
+      }).sort((a, b) => [modelName(data, a.deviceModelId), categoryName(data, a.partCategoryId), a.partName].join('|').localeCompare([modelName(data, b.deviceModelId), categoryName(data, b.partCategoryId), b.partName].join('|')));
+      const inStockCount = items.filter(item => Number(item.quantityInStock || 0) > 0).length;
+      summary.className = `fc-alert ${items.length ? 'good' : 'bad'}`;
+      summary.textContent = items.length
+        ? `${items.length} part item(s) found for this model. ${inStockCount} item(s) currently in stock.`
+        : 'No inventory parts found for that model name.';
+      table.innerHTML = items.length ? items.map(item => {
+        const qty = Number(item.quantityInStock || 0);
+        return `<tr>
+          <td>${escapeHtml(brandName(data, item.brandId))}<br><strong>${escapeHtml(modelName(data, item.deviceModelId))}</strong></td>
+          <td>${escapeHtml(categoryName(data, item.partCategoryId))}</td>
+          <td><strong>${escapeHtml(item.partName)}</strong><br><span class="fc-muted">${escapeHtml(item.sku)}</span></td>
+          <td>${escapeHtml(item.qualityType || 'Standard')}</td>
+          <td>${qty > 0 ? statusPill(`In Stock: ${qty}`) : statusPill('Out of Stock')}</td>
+          <td>$${money(item.sellingPrice)}</td>
+          <td>${escapeHtml(item.vendor)}</td>
+          <td>${escapeHtml(item.shelfLocation)}</td>
+        </tr>`;
+      }).join('') : '<tr><td colspan="8">No inventory parts found for that model.</td></tr>';
+    }
+
     function renderInventory(){
       const query = ($('#inventory-search') ? $('#inventory-search').value : '').toLowerCase();
       const brandFilter = $('#inventory-filter-brand') ? $('#inventory-filter-brand').value : '';
@@ -1448,6 +1628,7 @@
       });
       items.sort((a, b) => [brandName(data, a.brandId), modelName(data, a.deviceModelId), categoryName(data, a.partCategoryId), a.partName].join('|').localeCompare([brandName(data, b.brandId), modelName(data, b.deviceModelId), categoryName(data, b.partCategoryId), b.partName].join('|')));
       $('#inventory-table').innerHTML = inventoryRows(items);
+      renderModelStockCheck();
       $('#usage-table').innerHTML = data.usage.length ? data.usage.slice().reverse().map(use => `<tr><td>${escapeHtml(use.usedAt)}</td><td>${escapeHtml(use.ticketNumber)}</td><td>${escapeHtml(brandName(data, use.brandId))}</td><td>${escapeHtml(modelName(data, use.deviceModelId))}</td><td>${escapeHtml(categoryName(data, use.partCategoryId))}</td><td>${escapeHtml(use.partName)}</td><td>${escapeHtml(use.quantity)}</td></tr>`).join('') : '<tr><td colspan="7">No parts installed yet.</td></tr>';
     }
 
@@ -1529,13 +1710,14 @@
       render();
     });
 
-    ['ticket-brand','order-brand','order-device-model','order-category','order-inventory-part','ticket-part-ticket','ticket-part-category','inventory-brand','inventory-filter-brand','inventory-filter-model','inventory-filter-category'].forEach(id => {
+    ['ticket-brand','ticket-model','ticket-repair-category','ticket-inventory-part','ticket-use-inventory-now','order-brand','order-device-model','order-category','order-inventory-part','ticket-part-ticket','ticket-part-category','inventory-brand','inventory-filter-brand','inventory-filter-model','inventory-filter-category'].forEach(id => {
       const element = $(`#${id}`);
       if(element) element.addEventListener('change', () => {
         if(id === 'ticket-brand'){
           $('#ticket-model').value = '';
           if($('#ticket-model-search')) $('#ticket-model-search').value = '';
         }
+        if(id === 'ticket-model' || id === 'ticket-repair-category') $('#ticket-inventory-part').value = '';
         if(id === 'order-brand') $('#order-device-model').value = '';
         if(id === 'inventory-brand'){
           $('#inventory-model').value = '';
@@ -1544,13 +1726,17 @@
         if(id === 'inventory-filter-brand') $('#inventory-filter-model').value = '';
         data = loadData();
         populateAllSelects();
+        updateTicketStockPreview();
         renderInventory();
       });
     });
 
+    if($('#ticket-repair-quantity')) $('#ticket-repair-quantity').addEventListener('input', updateTicketStockPreview);
+
     if($('#ticket-model-search')) $('#ticket-model-search').addEventListener('input', () => {
       data = loadData();
       populateAllSelects();
+      updateTicketStockPreview();
     });
 
     if($('#inventory-model-search')) $('#inventory-model-search').addEventListener('input', () => {
@@ -1608,6 +1794,11 @@
 
     if($('#inventory-search')) $('#inventory-search').addEventListener('input', renderInventory);
     if($('#inventory-filter-low')) $('#inventory-filter-low').addEventListener('change', renderInventory);
+    if($('#model-stock-search')) $('#model-stock-search').addEventListener('input', renderModelStockCheck);
+    if($('#clear-model-stock-search')) $('#clear-model-stock-search').addEventListener('click', () => {
+      $('#model-stock-search').value = '';
+      renderModelStockCheck();
+    });
 
     if($('#order-inventory-part')) $('#order-inventory-part').addEventListener('change', () => {
       data = loadData();
@@ -1734,15 +1925,13 @@
       panel.innerHTML = `
         <h2>Email Delivery Infrastructure</h2>
         <div class="fc-alert">
-          Real automatic email sending is prepared but not connected yet. Choose a provider later, such as SendGrid, Mailgun, Resend, Amazon SES, or Laravel Mail.
+          Automatic email sending is prepared but not connected yet. After we choose a provider, repair and campaign emails can be sent from here.
         </div>
         <div class="fc-grid three" style="margin-top:12px">
           <div class="fc-result-item"><span>Provider</span><strong>${escapeHtml(data.emailSettings.provider || 'Not selected')}</strong></div>
           <div class="fc-result-item"><span>From email</span><strong>${escapeHtml(data.emailSettings.fromEmail)}</strong></div>
           <div class="fc-result-item"><span>Pending repair notifications</span><strong>${pending.length}</strong></div>
-        </div>
-        <h3>Queued Repair Ticket Emails</h3>
-        <div class="fc-table-wrap"><table class="fc-table"><tbody>${pending.length ? pending.slice().reverse().map(item => `<tr><td>${escapeHtml(item.createdAt)}</td><td>${escapeHtml(item.ticketNumber)}</td><td>${escapeHtml(item.customerName)}</td><td>${escapeHtml(item.email)}</td><td>${escapeHtml(item.status)}</td></tr>`).join('') : '<tr><td>No pending repair email notifications.</td></tr>'}</tbody></table></div>`;
+        </div>`;
     }
 
     function chatWhatsappMessage(chat){
@@ -1760,7 +1949,7 @@
     }
 
     function chatRows(chats){
-      if(!chats.length) return '<tr><td colspan="6">No chatbot conversations yet.</td></tr>';
+      if(!chats.length) return '<tr><td colspan="6"><strong>No AI chatbot conversations saved in this browser yet.</strong><br><span class="fc-muted">On GitHub Pages this AI chat is local-browser storage only. A real customer on another phone/computer will not appear here until we connect an email/webhook/backend service. For live instant alerts right now, use Tawk notifications.</span></td></tr>';
       return chats.map(chat => `<tr>
         <td><strong>${escapeHtml(chat.customer.name || 'Unknown')}</strong><br><span class="fc-muted">${escapeHtml(chat.customer.phone || '')}</span></td>
         <td>${escapeHtml(chat.customer.deviceModel || 'Device unclear')}<br><span class="fc-muted">${escapeHtml(chat.customer.issue || '')}</span></td>
@@ -1778,7 +1967,7 @@
       const detail = $('#chat-detail');
       if(!detail) return;
       if(!chat){
-        detail.innerHTML = '<h2>Conversation Detail</h2><p class="fc-muted">Open a conversation to view transcript, summary, lead details, and handoff controls.</p>';
+        detail.innerHTML = '<h2>Conversation Detail</h2><p class="fc-muted">Open a conversation to view transcript, summary, lead details, and handoff controls.</p><div class="fc-alert">Important: live customer messages from another device need Tawk or a connected email/webhook/backend service. Static GitHub Pages cannot receive those messages into admin by itself.</div>';
         return;
       }
       const whatsapp = whatsappLink(data.chatSettings, chatWhatsappMessage(chat));
@@ -2037,6 +2226,7 @@
         fillForm($('#ticket-form'), ticketById(data, ticketId));
         populateAllSelects();
         fillForm($('#ticket-form'), ticketById(data, ticketId));
+        if($('#ticket-new-payment-amount')) $('#ticket-new-payment-amount').value = '';
         updateTicketPaymentFields();
         $('#ticket-submit').textContent = 'Update Ticket';
         window.scrollTo({top:0, behavior:'smooth'});

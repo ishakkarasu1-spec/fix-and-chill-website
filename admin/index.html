@@ -102,18 +102,25 @@
             <button id="ticket-add-model" class="fc-btn secondary" type="button">Add Brand/Model</button>
             <span id="ticket-model-message" class="fc-muted"></span>
           </div>
+          <label>Repair type <select id="ticket-repair-category" name="repairCategoryId"></select></label>
+          <label>Needed inventory part <select id="ticket-inventory-part" name="selectedInventoryPartId"></select></label>
+          <label>Quantity needed <input id="ticket-repair-quantity" name="repairQuantity" type="number" min="1" value="1"></label>
+          <label>Use selected inventory now <select id="ticket-use-inventory-now" name="useInventoryNow"><option value="no">No, only attach to ticket</option><option value="yes">Yes, subtract from stock now</option></select></label>
+          <div id="ticket-stock-message" class="wide fc-alert" hidden></div>
           <label>IMEI or serial number <input name="serial"></label>
           <label>Estimated price <input name="estimatedPrice" type="number" step="0.01" min="0"></label>
           <label>Final price <input name="finalPrice" type="number" step="0.01" min="0"></label>
           <div class="wide fc-payment-box">
             <h3>Payment / Refund</h3>
-            <label>Payment type <select id="ticket-payment-type" name="paymentType"><option value="No payment collected">No payment collected</option><option value="Deposit">Deposit</option><option value="Partial payment">Partial payment</option><option value="Full payment">Full payment</option></select></label>
-            <label>Amount paid <input name="amountPaid" type="number" step="0.01" min="0"></label>
-            <label>Refund type <select id="ticket-refund-type" name="refundType"><option value="None">None</option><option value="Partial refund">Partial refund</option><option value="Full refund">Full refund</option></select></label>
+            <label>Payment type <select id="ticket-payment-type" name="paymentType"><option value="No payment collected">No payment collected</option><option value="Deposit">Deposit</option><option value="Partial payment">Partial payment</option><option value="Balance payment">Balance payment</option><option value="Full payment">Full payment</option></select></label>
+            <label>Total amount paid <input name="amountPaid" type="number" step="0.01" min="0"></label>
+            <label>Payment method <select id="ticket-payment-method" name="paymentMethod"><option value="">Select...</option><option value="Cash">Cash</option><option value="Credit/Debit Card">Credit/Debit Card</option><option value="Venmo">Venmo</option><option value="Zelle">Zelle</option><option value="Other">Other</option></select></label>
+            <label>Add balance payment <input id="ticket-new-payment-amount" name="newPaymentAmount" type="number" step="0.01" min="0" placeholder="Amount collected now"></label>
+            <label>Refund type <select id="ticket-refund-type" name="refundType"><option value="None">None</option><option value="Partial refund">Partial refund</option><option value="Deposit refund">Deposit refund</option><option value="Full refund">Full refund</option></select></label>
             <label>Refund amount <input id="ticket-refund-amount" name="refundAmount" type="number" step="0.01" min="0" value="0"></label>
             <label>Net after refund <input id="ticket-net-paid" name="netPaid" type="number" step="0.01" readonly></label>
             <label>Balance due <input id="ticket-balance-due" name="balanceDue" type="number" step="0.01" readonly></label>
-            <label class="wide">Refund / payment notes <textarea name="refundNotes" placeholder="Reason for partial/full refund, approval notes, payment details"></textarea></label>
+            <label class="wide">Refund / payment notes <textarea name="refundNotes" placeholder="Deposit, balance payment, refund reason, approval notes, payment details"></textarea></label>
           </div>
           <label>Repair status <select id="ticket-status" class="status-select" data-kind="ticket" name="status" required></select></label>
           <label>Estimated completion date <input name="estimatedCompletion" type="date"></label>
@@ -256,9 +263,18 @@
           </div>
         </form>
         <div class="fc-card">
+          <h2>Check Stock by Model</h2>
+          <div class="fc-filter-grid compact">
+            <input id="model-stock-search" class="fc-search" type="search" placeholder="Type model name: iPhone 17 Pro, Samsung S25 Ultra">
+            <button id="clear-model-stock-search" class="fc-btn secondary" type="button">Clear</button>
+          </div>
+          <div id="model-stock-summary" class="fc-alert" style="margin-top:12px">Type a model name to see all saved inventory parts for that device.</div>
+          <div class="fc-table-wrap" style="margin-top:12px"><table class="fc-table"><thead><tr><th>Model</th><th>Category</th><th>Part</th><th>Quality</th><th>Stock</th><th>Selling</th><th>Vendor</th><th>Shelf</th></tr></thead><tbody id="model-stock-table"></tbody></table></div>
+        </div>
+        <div class="fc-card">
           <h2>Inventory</h2>
           <div class="fc-filter-grid">
-            <input id="inventory-search" class="fc-search" type="search" placeholder="Search part, SKU, barcode, vendor, notes">
+            <input id="inventory-search" class="fc-search" type="search" placeholder="Search model, part, SKU, barcode, vendor, notes">
             <select id="inventory-filter-brand"></select>
             <select id="inventory-filter-model"></select>
             <select id="inventory-filter-category"></select>
