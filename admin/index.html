@@ -14,10 +14,10 @@
     <form id="login-form" class="fc-card fc-form">
       <img src="../assets/img/fixchill-logo.png" alt="Fix & Chill logo">
       <h1>Owner Login</h1>
-      <p>Default setup login: owner@fixandchill.local / FixChill2026!</p>
+      <p>Log in once, then this computer can stay signed in for 15 days.</p>
       <label>Email <input id="admin-email" type="email" autocomplete="username" required></label>
       <label>Password <input id="admin-password" type="password" autocomplete="current-password" required></label>
-      <label class="fc-check-row"><input id="remember-admin-login" type="checkbox"> <span>Remember this computer for 15 days</span></label>
+      <label class="fc-check-row fc-remember-row"><input id="remember-admin-login" type="checkbox" checked> <span>Remember this computer for 15 days</span></label>
       <button class="fc-btn" type="submit">Log In</button>
       <div id="login-error" class="fc-alert bad" hidden>Login failed. Check the owner email and password.</div>
     </form>

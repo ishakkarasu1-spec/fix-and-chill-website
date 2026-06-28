@@ -4,6 +4,7 @@
   const STORE_KEY = 'fixChillRepairManager.v1';
   const SESSION_KEY = 'fixChillAdminSession';
   const REMEMBER_KEY = 'fixChillAdminRememberUntil';
+  const REMEMBER_EMAIL_KEY = 'fixChillAdminRememberEmail';
   const ADMIN_EMAIL = 'owner@fixandchill.local';
   const ADMIN_PASSWORD = 'FixChill2026!';
 
@@ -25,7 +26,7 @@
   const defaultBrandNames = ['Apple','Samsung','Google','Motorola','OnePlus','iPad','Laptop'];
   const defaultPartCategoryNames = ['Screen','Battery','Charging Port','Back Glass','Front Camera','Rear Camera','Speaker','Earpiece Speaker','Microphone','Housing','Flex Cable','Face ID Parts','Buttons','SIM Tray','Adhesive','Other'];
   const deviceTypes = ['Phone','Tablet','Laptop','Game Console'];
-  const qualityTypes = ['Aftermarket','Premium','Soft OLED','Hard OLED','Original Pull','Refurbished','OEM','Genuine'];
+  const qualityTypes = ['Aftermarket','Premium','Soft OLED','Soft OLED 1','Soft OLED Warranty Break','FOG','Hard OLED','Original Pull','Refurbished','OEM','Genuine'];
   const paymentMethods = ['','Cash','Credit/Debit Card','Venmo','Zelle','Other'];
   const campaignStatuses = ['Draft','Scheduled','Sent','Cancelled','Expired'];
   const discountTypes = ['Percentage','Fixed amount','Free diagnostic','Custom offer'];
@@ -929,9 +930,13 @@
     }
 
     function showApp(){
-      login.style.display = signedIn() ? 'none' : 'grid';
-      app.style.display = signedIn() ? 'grid' : 'none';
-      if(signedIn()){
+      const isSignedIn = signedIn();
+      login.style.display = isSignedIn ? 'none' : 'grid';
+      app.style.display = isSignedIn ? 'grid' : 'none';
+      if(!isSignedIn && $('#admin-email') && localStorage.getItem(REMEMBER_EMAIL_KEY)){
+        $('#admin-email').value = localStorage.getItem(REMEMBER_EMAIL_KEY);
+      }
+      if(isSignedIn){
         render();
         if(!campaignTimer) campaignTimer = setInterval(render, 60000);
       }else if(campaignTimer){
@@ -948,8 +953,10 @@
         sessionStorage.setItem(SESSION_KEY, 'yes');
         if($('#remember-admin-login') && $('#remember-admin-login').checked){
           localStorage.setItem(REMEMBER_KEY, String(Date.now() + 15 * 24 * 60 * 60 * 1000));
+          localStorage.setItem(REMEMBER_EMAIL_KEY, email);
         }else{
           localStorage.removeItem(REMEMBER_KEY);
+          localStorage.removeItem(REMEMBER_EMAIL_KEY);
         }
         $('#login-error').hidden = true;
         showApp();
@@ -961,6 +968,7 @@
     $('.fc-logout').addEventListener('click', () => {
       sessionStorage.removeItem(SESSION_KEY);
       localStorage.removeItem(REMEMBER_KEY);
+      localStorage.removeItem(REMEMBER_EMAIL_KEY);
       showApp();
     });
 

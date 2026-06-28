@@ -77,6 +77,8 @@ body.fc-admin-body{margin:0;background:var(--fc-bg);color:var(--fc-ink);font:15p
 .fc-login img{width:130px;margin:0 auto 16px}
 .fc-login h1{margin:0 0 6px;text-align:center}
 .fc-login p{text-align:center;color:var(--fc-muted);margin:0 0 18px}
+.fc-login .fc-remember-row{display:flex;align-items:center;justify-content:flex-start;gap:8px;margin:2px 0 4px}
+.fc-login .fc-remember-row input{width:auto}
 .fc-public{max-width:920px;margin:0 auto;padding:26px}
 .fc-public-header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px}
 .fc-public-header img{width:150px}
