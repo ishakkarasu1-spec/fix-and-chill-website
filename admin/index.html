@@ -110,7 +110,7 @@
           <label>IMEI or serial number <input name="serial"></label>
           <label>Estimated price <input name="estimatedPrice" type="number" step="0.01" min="0"></label>
           <label>Final price <input name="finalPrice" type="number" step="0.01" min="0"></label>
-          <div class="wide fc-payment-box">
+          <div id="ticket-payment-box" class="wide fc-payment-box">
             <h3>Payment / Refund</h3>
             <label>Payment type <select id="ticket-payment-type" name="paymentType"><option value="No payment collected">No payment collected</option><option value="Deposit">Deposit</option><option value="Partial payment">Partial payment</option><option value="Balance payment">Balance payment</option><option value="Full payment">Full payment</option></select></label>
             <label>Total amount paid <input name="amountPaid" type="number" step="0.01" min="0"></label>
@@ -118,8 +118,9 @@
             <label>Add balance payment <input id="ticket-new-payment-amount" name="newPaymentAmount" type="number" step="0.01" min="0" placeholder="Amount collected now"></label>
             <label>Refund type <select id="ticket-refund-type" name="refundType"><option value="None">None</option><option value="Partial refund">Partial refund</option><option value="Deposit refund">Deposit refund</option><option value="Full refund">Full refund</option></select></label>
             <label>Refund amount <input id="ticket-refund-amount" name="refundAmount" type="number" step="0.01" min="0" value="0"></label>
-            <label>Net after refund <input id="ticket-net-paid" name="netPaid" type="number" step="0.01" readonly></label>
+            <label>Paid after refunds <input id="ticket-net-paid" name="netPaid" type="number" step="0.01" readonly></label>
             <label>Balance due <input id="ticket-balance-due" name="balanceDue" type="number" step="0.01" readonly></label>
+            <div id="ticket-payment-message" class="wide fc-alert" hidden></div>
             <label class="wide">Refund / payment notes <textarea name="refundNotes" placeholder="Deposit, balance payment, refund reason, approval notes, payment details"></textarea></label>
           </div>
           <label>Repair status <select id="ticket-status" class="status-select" data-kind="ticket" name="status" required></select></label>

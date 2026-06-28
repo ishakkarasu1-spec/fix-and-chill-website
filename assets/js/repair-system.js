@@ -1184,11 +1184,51 @@
       const values = formToObject(form);
       const refundType = values.refundType || 'None';
       const refundInput = $('#ticket-refund-amount');
+      const message = $('#ticket-payment-message');
       if(refundInput) refundInput.readOnly = !['Partial refund','Deposit refund'].includes(refundType);
       const calculated = calculateTicketPayments(values);
       if(refundInput) refundInput.value = calculated.refundAmount.toFixed(2);
       if($('#ticket-net-paid')) $('#ticket-net-paid').value = calculated.netPaid.toFixed(2);
       if($('#ticket-balance-due')) $('#ticket-balance-due').value = calculated.balanceDue.toFixed(2);
+      if(message){
+        const completedStatus = ['Repair Completed','Delivered'].includes(normalizeTicketStatus(values.status));
+        if(refundType === 'None'){
+          message.className = 'wide fc-alert good';
+          message.textContent = `No refund selected. Paid after refunds is the actual money kept so far: $${calculated.netPaid.toFixed(2)}.`;
+        }else{
+          message.className = 'wide fc-alert';
+          message.textContent = `${refundType} selected. Paid after refunds is amount paid minus refund amount.`;
+        }
+        if(completedStatus && calculated.balanceDue > 0){
+          message.className = 'wide fc-alert bad';
+          message.textContent = `This ticket is completed but still has $${calculated.balanceDue.toFixed(2)} balance due. Choose payment method, enter that amount in Add balance payment, then update the ticket.`;
+        }else if(completedStatus && calculated.balanceDue === 0){
+          message.className = 'wide fc-alert good';
+          message.textContent = 'This ticket is completed and the balance due is $0.00.';
+        }
+        message.hidden = false;
+      }
+    }
+
+    function guidePaymentForCompletedTicket(){
+      updateTicketPaymentFields();
+      const form = $('#ticket-form');
+      if(!form) return;
+      const values = formToObject(form);
+      const calculated = calculateTicketPayments(values);
+      if(['Repair Completed','Delivered'].includes(normalizeTicketStatus(values.status)) && calculated.balanceDue > 0){
+        const paymentBox = $('#ticket-payment-box');
+        if(paymentBox){
+          paymentBox.classList.add('fc-attention');
+          paymentBox.scrollIntoView({behavior:'smooth', block:'center'});
+          setTimeout(() => paymentBox.classList.remove('fc-attention'), 1800);
+        }
+        const amountField = $('#ticket-new-payment-amount');
+        if(amountField && !amountField.value) amountField.value = calculated.balanceDue.toFixed(2);
+        const methodField = $('#ticket-payment-method');
+        if(methodField && !methodField.value) methodField.focus();
+        updateTicketPaymentFields();
+      }
     }
 
     function updateTicketStockPreview(){
@@ -1278,11 +1318,12 @@
       return result;
     }
 
-    ['finalPrice','amountPaid','newPaymentAmount','refundAmount','refundType','paymentMethod'].forEach(name => {
+    ['finalPrice','amountPaid','newPaymentAmount','refundAmount','refundType','paymentMethod','status'].forEach(name => {
       const field = $('#ticket-form').elements[name];
       if(field) field.addEventListener('input', updateTicketPaymentFields);
       if(field) field.addEventListener('change', updateTicketPaymentFields);
     });
+    if($('#ticket-status')) $('#ticket-status').addEventListener('change', guidePaymentForCompletedTicket);
 
     $('#ticket-form').addEventListener('submit', event => {
       event.preventDefault();
@@ -2222,14 +2263,18 @@
         saveData(data); render();
       }
       if(target.dataset.editTicket){
+        current = 'tickets';
         editing.ticket = ticketId;
+        render();
+        data = loadData();
         fillForm($('#ticket-form'), ticketById(data, ticketId));
         populateAllSelects();
         fillForm($('#ticket-form'), ticketById(data, ticketId));
         if($('#ticket-new-payment-amount')) $('#ticket-new-payment-amount').value = '';
         updateTicketPaymentFields();
+        updateTicketStockPreview();
         $('#ticket-submit').textContent = 'Update Ticket';
-        window.scrollTo({top:0, behavior:'smooth'});
+        $('#ticket-form').scrollIntoView({behavior:'smooth', block:'start'});
       }
       if(target.dataset.deleteTicket && confirm('Delete this repair ticket?')){
         data.tickets = data.tickets.filter(ticket => ticket.id !== ticketId);
