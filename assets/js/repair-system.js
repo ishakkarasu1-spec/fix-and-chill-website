@@ -1407,9 +1407,48 @@
       }).join('');
     }
 
+    function requiredPartCards(parts){
+      if(!parts.length) return '<p class="fc-muted">No required parts found.</p>';
+      return parts.map(part => {
+        const ticket = ticketPartTicket(data, part);
+        const customer = ticket ? customerById(data, ticket.customerId) : null;
+        const stockItem = part.inventoryItemId ? data.inventory.find(entry => entry.id === part.inventoryItemId) : findMatchingInventoryForTicketPart(data, part);
+        const stockQty = stockItem ? Number(stockItem.quantityInStock || 0) : 0;
+        const neededQty = Math.max(1, Number(part.quantityNeeded || 1));
+        const hasStock = stockQty >= neededQty;
+        const stockLabel = hasStock ? statusPill(`In Stock: ${stockQty}`) : statusPill('Out of Stock');
+        const canOrder = part.partStatus === 'not_ordered';
+        const canDeliver = part.partStatus === 'ordered';
+        const canReceive = part.partStatus === 'delivered';
+        const canUse = part.partStatus === 'received_into_inventory';
+        const actions = `
+          ${canOrder ? `<button class="fc-btn secondary" data-part-action="ordered" data-ticket-part="${part.id}">Order Part</button>` : ''}
+          ${canDeliver ? `<button class="fc-btn secondary" data-part-action="delivered" data-ticket-part="${part.id}">Delivered</button>` : ''}
+          ${canReceive ? `<button class="fc-btn accent" data-part-action="receive" data-ticket-part="${part.id}">Receive</button>` : ''}
+          ${hasStock && part.partStatus !== 'used_for_repair' && part.partStatus !== 'cancelled' ? `<button class="fc-btn accent" data-part-action="${canUse ? 'use' : 'use-existing'}" data-ticket-part="${part.id}">${canUse ? 'Use Part' : 'Use Stock'}</button>` : ''}
+          ${part.partStatus !== 'used_for_repair' && part.partStatus !== 'cancelled' ? `<button class="fc-btn danger" data-part-action="cancelled" data-ticket-part="${part.id}">Cancel</button>` : ''}
+          <button class="fc-btn secondary" data-edit-ticket-part="${part.id}">Edit</button>`;
+        return `<article class="fc-required-part-card">
+          <div class="fc-required-main">
+            <strong>${escapeHtml(part.partName)}</strong>
+            <span>${escapeHtml(ticket ? ticket.ticketNumber : part.ticketNumber)}${customer ? ` - ${escapeHtml(fullName(customer))}` : ''}</span>
+            <span>${escapeHtml(ticket ? deviceLabel(data, ticket.brandId, ticket.deviceModelId) : part.deviceModel)}</span>
+          </div>
+          <div class="fc-required-badges">${partStatusPill(part.partStatus)} ${stockLabel}</div>
+          <div class="fc-required-meta">
+            <span><strong>Repair:</strong> ${escapeHtml(part.repairType || '-')}</span>
+            <span><strong>Qty:</strong> ${escapeHtml(part.quantityNeeded || 1)} needed, ${escapeHtml(part.quantityReceived || 0)} received, ${escapeHtml(part.quantityUsed || 0)} used</span>
+            <span><strong>Supplier:</strong> ${escapeHtml(part.supplierName || '-')} ${part.supplierSku ? `(${escapeHtml(part.supplierSku)})` : ''}</span>
+            <span><strong>Dates:</strong> Ordered ${escapeHtml(part.orderedAt || '-')} / Delivered ${escapeHtml(part.deliveredAt || '-')} / Received ${escapeHtml(part.receivedAt || '-')}</span>
+          </div>
+          <div class="fc-actions">${actions}</div>
+        </article>`;
+      }).join('');
+    }
+
     function renderRequiredParts(){
-      const table = $('#ticket-required-parts-table');
-      if(table) table.innerHTML = requiredPartRows(data.ticketParts.slice().reverse());
+      const list = $('#ticket-required-parts-table');
+      if(list) list.innerHTML = requiredPartCards(data.ticketParts.slice().reverse());
     }
 
     function renderPartsWaiting(){
@@ -2783,6 +2822,13 @@
       const ticketNumber = values.ticketNumber.toUpperCase();
       const phone = values.phone.replace(/\D/g, '');
       const name = values.lastName.toLowerCase().trim();
+      const hasValidLookup = (ticketNumber && (phone || name)) || (!ticketNumber && phone && name);
+      if(!hasValidLookup){
+        result.hidden = true;
+        error.textContent = 'For privacy, enter ticket number plus phone or last name, OR enter phone number plus last name.';
+        error.hidden = false;
+        return;
+      }
       const ticket = data.tickets.find(entry => {
         const customer = customerById(data, entry.customerId);
         if(!customer) return false;
@@ -2793,6 +2839,7 @@
       });
       if(!ticket){
         result.hidden = true;
+        error.textContent = 'No repair ticket was found. Please check the ticket number, phone number, or last name and try again.';
         error.hidden = false;
         return;
       }
