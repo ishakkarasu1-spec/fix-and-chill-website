@@ -1,195 +1,188 @@
-
-// Make entire cards clickable and optionally open in new tab
-document.addEventListener('click', function(e){
-  const card = e.target.closest('.card');
-  if(!card) return;
-  if(e.target.closest('a')) return; // let buttons/links work as is
-  const url = card.dataset.url;
-  if(!url) return;
-  const blank = card.dataset.blank === 'true';
-  if(blank){
-    window.open(url, '_blank', 'noopener,noreferrer');
-  }else{
-    window.location.href = url;
-  }
-});
-
-document.querySelectorAll('video[data-stop-at]').forEach(function(video){
-  const stopAt = Number(video.dataset.stopAt);
-  if(!Number.isFinite(stopAt) || stopAt <= 0) return;
-  video.addEventListener('timeupdate', function(){
-    if(video.currentTime >= stopAt){
-      video.currentTime = 0;
-      video.play().catch(function(){});
-    }
-  });
-});
-
-document.querySelectorAll('.top-slideshow').forEach(function(slideshow){
-  const slides = Array.from(slideshow.querySelectorAll('.slideshow-slide'));
-  const dotsWrap = slideshow.querySelector('.slideshow-dots');
-  if(slides.length < 2 || !dotsWrap) return;
-
-  const dots = slides.map(function(_, index){
-    const dot = document.createElement('span');
-    dot.className = 'slideshow-dot' + (index === 0 ? ' is-active' : '');
-    dotsWrap.appendChild(dot);
-    return dot;
-  });
-
-  let current = Math.max(0, slides.findIndex(function(slide){ return slide.classList.contains('is-active'); }));
-
-  function showSlide(next){
-    slides[current].classList.remove('is-active');
-    dots[current].classList.remove('is-active');
-    const oldVideo = slides[current].querySelector('video');
-    if(oldVideo) oldVideo.pause();
-
-    current = next % slides.length;
-    slides[current].classList.add('is-active');
-    dots[current].classList.add('is-active');
-    const video = slides[current].querySelector('video');
-    if(video){
-      video.currentTime = 0;
-      video.play().catch(function(){});
-    }
-  }
-
-  setInterval(function(){
-    showSlide(current + 1);
-  }, 4000);
-});
-
-const mobileScrollQuery = window.matchMedia('(max-width: 1024px)');
-function updateMobileScrolledNav(){
-  const shouldCompact = mobileScrollQuery.matches && window.scrollY > 24;
-  document.body.classList.toggle('mobile-nav-scrolled', shouldCompact);
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Contact Fix&Chill | Phone Repair Rehoboth Beach & Eastern Shore</title>
+  <meta name="description" content="Contact Fix&Chill for same-day phone repair, iPhone screen repair, Samsung repair, MacBook repair, laptop repair and device buyback in Rehoboth Beach and Eastern Shore.">
+  <meta name="keywords" content="Fix&Chill, phone repair Rehoboth Beach, same day phone repair, mobile phone repair, we come to you phone repair, iPhone screen repair, Samsung screen repair, iPad repair, cracked screen repair, battery replacement, charging port repair, MacBook repair, laptop repair, phone repair Lewes DE, phone repair Laurel DE, phone repair Georgetown DE, phone repair Salisbury MD, phone repair Ocean City MD, phone repair Ocean View DE, Eastern Shore phone repair, Delmarva phone repair, mobile phone repair near me, device buyback, sell phone for cash, sell iPhone Rehoboth Beach">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <meta name="author" content="Fix&Chill">
+  <meta name="theme-color" content="#1f6e6f">
+  <link rel="canonical" href="https://www.fixandchillphonerepair.com/contact.html">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta property="og:title" content="Contact Fix&Chill | Phone Repair Rehoboth Beach & Eastern Shore">
+  <meta property="og:description" content="Contact Fix&Chill for same-day phone repair, iPhone screen repair, Samsung repair, MacBook repair, laptop repair and device buyback in Rehoboth Beach and Eastern Shore.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://www.fixandchillphonerepair.com/contact.html">
+  <meta property="og:image" content="https://www.fixandchillphonerepair.com/assets/img/fixchill-logo.png">
+  <link rel="icon" href="assets/img/fixchill-logo.png">
+  <link rel="stylesheet" href="assets/css/style.css?v=20260521-modal-ux">
+  <script defer src="assets/js/app.js?v=20260521-modal-ux"></script>
+  <script type="application/ld+json">
+  {
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  "name": "Fix&Chill",
+  "image": "https://www.fixandchillphonerepair.com/assets/img/fixchill-logo.png",
+  "telephone": "+1-302-727-3842",
+  "email": "fixandchill1@gmail.com",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "37285 Rehoboth Avenue",
+    "addressLocality": "Rehoboth Beach",
+    "addressRegion": "DE",
+    "postalCode": "",
+    "addressCountry": "US"
+  },
+  "url": "https://www.fixandchillphonerepair.com/",
+  "areaServed": [
+    "Rehoboth Beach",
+    "Lewes",
+    "Georgetown",
+    "Milford",
+    "Milton",
+    "Millsboro",
+    "Dagsboro",
+    "Frankford",
+    "Selbyville",
+    "Bethany Beach",
+    "Fenwick Island",
+    "Seaford",
+    "Laurel",
+    "Ocean View",
+    "Ocean City",
+    "Berlin",
+    "Ocean Pines",
+    "Salisbury",
+    "Pittsville",
+    "Delaware Eastern Shore",
+    "Maryland Eastern Shore",
+    "Sussex County",
+    "Delmarva"
+  ],  "priceRange": "$$"
 }
-updateMobileScrolledNav();
-window.addEventListener('scroll', updateMobileScrolledNav, {passive:true});
-mobileScrollQuery.addEventListener('change', updateMobileScrolledNav);
+  </script>
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-CQGRLGBX91"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-CQGRLGBX91');
+  </script>
+  <!-- Microsoft Clarity -->
+  <script>
+    (function(c,l,a,r,i,t,y){
+      c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+      t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+      y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "wr01neya2x");
+  </script></head>
+<body>
+<header class="container nav">
+  <a class="logo logo-wide" href="index.html"><img src="assets/img/fixchill-logo.png" alt="Fix&Chill mobile phone repair logo"></a>
+  <span class="logo-service-line nav-service-line">Serving Eastern Shore for over 11 years.</span>
+  <nav>
+    <a href="sell.html" target="_blank" rel="noopener noreferrer">Sell Device</a>
+    <a href="repairs.html" target="_blank" rel="noopener noreferrer">Repairs</a>
+    <a href="accessories.html" target="_blank" rel="noopener noreferrer">Accessories</a>
+    <a href="index.html#onsite" target="_blank" rel="noopener noreferrer">On-Site Repair</a>
+    <a href="index.html#about" target="_blank" rel="noopener noreferrer">About Us</a>
+    <a href="warranty.html" target="_blank" rel="noopener noreferrer">Warranty</a>
+    <div class="nav-contact">
+      <a href="contact.html" class="btn" target="_blank" rel="noopener noreferrer">Contact</a>
+      <div class="social-links nav-social" aria-label="Fix&Chill social media links">
+        <a class="social-link facebook" href="https://www.facebook.com/share/15hH6Arcbn8/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" aria-label="Fix&Chill Facebook page"><span>f</span></a>
+        <a class="social-link instagram" href="https://www.instagram.com/fixandchill2?igsh=czBoOG51YjZkeXlr&amp;utm_source=qr" target="_blank" rel="noopener noreferrer" aria-label="Fix&Chill Instagram page"><span>IG</span></a>
+        <a class="social-link tiktok" href="https://www.tiktok.com/@fixchillrehobothbeach?_r=1&amp;_t=ZP-968byyi4zZG" target="_blank" rel="noopener noreferrer" aria-label="Fix&Chill TikTok page"><span>TT</span></a>
+        <a class="social-link youtube" href="https://youtube.com/@fixandchillrehoboth?si=Y4QC3N38l9z2fQoQ" target="_blank" rel="noopener noreferrer" aria-label="Fix&Chill YouTube channel"><span>?</span></a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="topbar">
+  <span>Same-day repair &amp; Buyback</span>
+  <a href="tel:+13027273842" class="topbar-call">Call (302) 727-3842</a>
+</div>
 
-const siteModals = Array.from(document.querySelectorAll('.site-modal'));
-function openModalById(id){
-  const modal = document.getElementById(id);
-  if(!modal) return false;
-  siteModals.forEach(function(otherModal){
-    otherModal.classList.remove('is-open');
-    otherModal.setAttribute('aria-hidden', 'true');
-  });
-  modal.classList.add('is-open');
-  modal.setAttribute('aria-hidden', 'false');
-  document.body.classList.add('modal-open');
-  setTimeout(function(){
-    if(window.Tally && typeof window.Tally.loadEmbeds === 'function'){
-      window.Tally.loadEmbeds();
-    }
-  }, 60);
-  const closeButton = modal.querySelector('[data-modal-close]');
-  if(closeButton) closeButton.focus({preventScroll:true});
-  return true;
-}
+<section class="container">
+  <h1>Contact</h1>
+  <div class="social-links" aria-label="Fix&Chill social media links">
+    <a class="social-link facebook" href="https://www.facebook.com/share/15hH6Arcbn8/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" aria-label="Fix&Chill Facebook page"><span>f</span></a>
+    <a class="social-link instagram" href="https://www.instagram.com/fixandchill2?igsh=czBoOG51YjZkeXlr&amp;utm_source=qr" target="_blank" rel="noopener noreferrer" aria-label="Fix&Chill Instagram page"><span>IG</span></a>
+    <a class="social-link tiktok" href="https://www.tiktok.com/@fixchillrehobothbeach?_r=1&amp;_t=ZP-968byyi4zZG" target="_blank" rel="noopener noreferrer" aria-label="Fix&Chill TikTok page"><span>TT</span></a>
+    <a class="social-link youtube" href="https://youtube.com/@fixandchillrehoboth?si=Y4QC3N38l9z2fQoQ" target="_blank" rel="noopener noreferrer" aria-label="Fix&Chill YouTube channel"><span>?</span></a>
+  </div>
+  <p>We're on Rehoboth Avenue. Reach out for repair bookings, buyback quotes and general questions.</p>
+  <div class="contact-grid">
+    <div>
+      <h3>Address</h3>
+      <p><span class="old-location">Old Location</span><br><span class="come-to-you-location">Now We Come To You</span><br>37285 Rehoboth Avenue, Rehoboth Beach, Delaware</p>
+      <h3>Phone</h3>
+      <p><a href="tel:+13027273842">(302) 727-3842</a></p>
+      <h3>Email for Booking &amp; Questions</h3>
+      <p><a href="mailto:fixandchill1@gmail.com">fixandchill1@gmail.com</a></p>
+    </div>
+    <div>
+      <h3>Map</h3>
+      <div class="map-embed">
+        <!-- Replace with your Google Maps embed when available -->
+        <iframe src="https://www.google.com/maps?q=37285%20Rehoboth%20Avenue%20Rehoboth%20Beach%20DE&output=embed" loading="lazy"></iframe>
+      </div>
+    </div>
+  </div>
+</section>
 
-function closeModal(modal){
-  if(!modal) return;
-  modal.classList.remove('is-open');
-  modal.setAttribute('aria-hidden', 'true');
-  if(!document.querySelector('.site-modal.is-open')){
-    document.body.classList.remove('modal-open');
+<footer class="container footer">
+  <address>
+    <span class="old-location">Old Location</span><br>
+    <span class="come-to-you-location">Now We Come To You</span><br>
+    <strong>Fix&Chill</strong><br>
+    37285 Rehoboth Avenue, Rehoboth Beach, Delaware<br>
+    <a href="tel:+13027273842">(302) 727-3842</a><br>
+    <a href="mailto:fixandchill1@gmail.com">fixandchill1@gmail.com</a>
+  </address>
+    <p class="footer-service-areas"><strong><a href="index.html#service-areas">Service Areas:</a></strong> Mobile phone repair service areas: <a href="/rehoboth-beach-phone-repair">Rehoboth Beach</a>, <a href="/lewes-phone-repair">Lewes</a>, <a href="/georgetown-phone-repair">Georgetown</a>, <a href="/milford-phone-repair">Milford</a>, <a href="/milton-phone-repair">Milton</a>, <a href="/millsboro-phone-repair">Millsboro</a>, Dagsboro, Frankford, Selbyville, Bethany Beach, Fenwick Island, Seaford, Laurel, Ocean View, <a href="/ocean-city-phone-repair">Ocean City</a>, Berlin, Ocean Pines, <a href="/salisbury-phone-repair">Salisbury</a>, Pittsville.</p><p>&copy; Fix&Chill - Same-day phone repair & device buyback in Rehoboth Beach & Eastern Shore.</p>
+</footer>
+<!--Start of Tawk.to Script - optional live human chat-->
+<script type="text/javascript">
+var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+Tawk_API.customStyle = {
+  visibility: {
+    desktop: {position: 'bl', xOffset: 12, yOffset: 12},
+    mobile: {position: 'bl', xOffset: 10, yOffset: 10}
   }
-}
+};
+(function(){
+var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+s1.async=true;
+s1.src='https://embed.tawk.to/6a05e14cf7c7ab1c39ff2f45/1jojfg5bo';
+s1.charset='UTF-8';
+s1.setAttribute('crossorigin','*');
+s0.parentNode.insertBefore(s1,s0);
+})();
+</script>
+<!--End of Tawk.to Script-->
+<script defer src="/assets/js/chat-widget.js"></script>
+</body>
+</html>
 
-document.querySelectorAll('[data-modal-target]').forEach(function(trigger){
-  trigger.addEventListener('click', function(e){
-    const targetId = trigger.getAttribute('data-modal-target');
-    if(openModalById(targetId)){
-      e.preventDefault();
-    }
-  });
-});
 
-document.addEventListener('click', function(e){
-  if(!e.target.matches('[data-modal-close]')) return;
-  closeModal(e.target.closest('.site-modal'));
-});
 
-document.addEventListener('keydown', function(e){
-  if(e.key !== 'Escape') return;
-  closeModal(document.querySelector('.site-modal.is-open'));
-});
 
-const serviceAreaSearch = document.querySelector('#service-area-search');
-if(serviceAreaSearch){
-  const areaLinks = Array.from(document.querySelectorAll('.area-links a'));
-  const futureLocationLinks = Array.from(document.querySelectorAll('.location-future-link'));
-  const bookRepair = document.querySelector('#book-repair');
-  const availableLocationPages = new Set([
-    '/rehoboth-beach-phone-repair',
-    '/lewes-phone-repair',
-    '/georgetown-phone-repair',
-    '/milford-phone-repair',
-    '/milton-phone-repair',
-    '/millsboro-phone-repair',
-    '/ocean-city-phone-repair',
-    '/salisbury-phone-repair'
-  ]);
 
-  function goToBookRepair(){
-    if(openModalById('repair-modal')) return;
-    if(!bookRepair) return;
-    bookRepair.scrollIntoView({behavior:'smooth', block:'start'});
-  }
 
-  function normalizedPath(link){
-    try{
-      return new URL(link.getAttribute('href'), window.location.origin).pathname.replace(/\/$/,'');
-    }catch(e){
-      return '';
-    }
-  }
 
-  function handleAreaLink(link){
-    const path = normalizedPath(link);
-    if(availableLocationPages.has(path)){
-      window.location.href = link.getAttribute('href');
-      return;
-    }
-    goToBookRepair();
-  }
 
-  serviceAreaSearch.addEventListener('input', function(){
-    const query = serviceAreaSearch.value.trim().toLowerCase();
-    areaLinks.forEach(function(link){
-      const match = !query || link.textContent.toLowerCase().includes(query);
-      link.style.display = match ? 'inline-flex' : 'none';
-      const parentPanel = link.closest('details');
-      if(query && match && parentPanel){
-        parentPanel.open = true;
-      }
-    });
-  });
 
-  serviceAreaSearch.addEventListener('change', function(){
-    const query = serviceAreaSearch.value.trim().toLowerCase().replace(/,\s*(de|md)$/,'');
-    const match = areaLinks.find(function(link){
-      return link.textContent.trim().toLowerCase() === query;
-    });
-    if(match){
-      handleAreaLink(match);
-    }
-  });
 
-  areaLinks.forEach(function(link){
-    link.addEventListener('click', function(e){
-      e.preventDefault();
-      handleAreaLink(link);
-    });
-  });
 
-  futureLocationLinks.forEach(function(link){
-    link.addEventListener('click', function(e){
-      e.preventDefault();
-      handleAreaLink(link);
-    });
-  });
-}
+
+
+
+
+
+
+
+

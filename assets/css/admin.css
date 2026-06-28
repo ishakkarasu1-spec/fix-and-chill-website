@@ -20,6 +20,7 @@ body.fc-admin-body{margin:0;background:var(--fc-bg);color:var(--fc-ink);font:15p
 .fc-nav{display:grid;gap:7px}
 .fc-nav button,.fc-logout{border:0;border-radius:8px;padding:11px 12px;text-align:left;background:transparent;color:#e9fbfc;cursor:pointer;font:inherit}
 .fc-nav button.active,.fc-nav button:hover,.fc-logout:hover{background:rgba(255,255,255,.13)}
+.fc-nav-badge{float:right;min-width:22px;border-radius:999px;background:#f2b137;color:#111;padding:1px 7px;text-align:center;font-size:12px;font-weight:900}
 .fc-logout{width:100%;margin-top:18px;border:1px solid rgba(255,255,255,.18)}
 .fc-main{padding:26px;max-width:1480px;width:100%}
 .fc-topline{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px}
@@ -84,6 +85,16 @@ body.fc-admin-body{margin:0;background:var(--fc-bg);color:var(--fc-ink);font:15p
 .fc-check-row input{width:auto}
 .fc-email-preview{white-space:pre-wrap;background:#f8fafc;border:1px solid var(--fc-border);border-radius:8px;padding:12px;max-height:280px;overflow:auto}
 .fc-filter-grid{display:grid;grid-template-columns:2fr repeat(3,1fr) auto;gap:10px;align-items:center}
+.fc-filter-grid.compact{grid-template-columns:1fr 190px}
+.fc-transcript{display:grid;gap:9px;max-height:360px;overflow:auto;padding:10px;background:#f8fafc;border:1px solid var(--fc-border);border-radius:8px}
+.fc-chat-line{max-width:86%;padding:9px 11px;border-radius:8px;background:#fff;border:1px solid var(--fc-border)}
+.fc-chat-line.customer{justify-self:end;background:#e8f2f3}
+.fc-chat-line.owner{justify-self:start;background:#fff7db}
+.fc-chat-line.system{justify-self:center;max-width:100%;background:#eef2ff;color:#27376a}
+.fc-chat-line strong{display:block;font-size:12px;color:#526174;margin-bottom:3px}
+.fc-chat-compose{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:10px}
+.fc-chat-compose textarea{min-height:72px}
+.fc-notification-card{border-left:4px solid var(--fc-accent)}
 .fc-brochure-preview{border:1px solid var(--fc-border);border-radius:8px;overflow:hidden;background:#fff;min-height:180px}
 .fc-brochure-art{display:grid;grid-template-columns:1.1fr .9fr;min-height:220px;background:linear-gradient(135deg,#123f43 0%,#1f6e6f 55%,#f2b137 55%,#f2b137 100%);color:#fff}
 .fc-brochure-copy{padding:24px;display:grid;align-content:center;gap:8px}

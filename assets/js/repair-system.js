@@ -7,10 +7,20 @@
   const ADMIN_PASSWORD = 'FixChill2026!';
 
   const repairStatuses = [
-    'Booked','Item Ordered','Item Received','Device Received','In Repair','Ready for Pickup',
+    'Booked','Item Ordered','Item Received','Waiting for Part','Device Received','In Repair','Ready for Pickup',
     'Repair Completed','Delivered','Cancelled'
   ];
   const orderStatuses = ['Not Ordered','Ordered','Shipped','Received','Cancelled'];
+  const ticketPartStatuses = ['not_ordered','ordered','delivered','received_into_inventory','used_for_repair','cancelled'];
+  const chatStatuses = ['AI Chatting','Needs Human Review','Technician Joined','Closed'];
+  const ticketPartStatusLabels = {
+    not_ordered:'Not Ordered',
+    ordered:'Ordered',
+    delivered:'Delivered',
+    received_into_inventory:'Received Into Inventory',
+    used_for_repair:'Used For Repair',
+    cancelled:'Cancelled'
+  };
   const defaultBrandNames = ['Apple','Samsung','Google','Motorola','OnePlus','iPad','Laptop'];
   const defaultPartCategoryNames = ['Screen','Battery','Charging Port','Back Glass','Front Camera','Rear Camera','Speaker','Earpiece Speaker','Microphone','Housing','Flex Cable','Face ID Parts','Buttons','SIM Tray','Adhesive','Other'];
   const deviceTypes = ['Phone','Tablet','Laptop','Game Console'];
@@ -66,9 +76,22 @@
       orders:[],
       inventory:[],
       usage:[],
+      ticketParts:[],
+      inventoryMovements:[],
       campaigns:[],
       emailLog:[],
       notificationQueue:[],
+      chatConversations:[],
+      chatLeads:[],
+      chatNotifications:[],
+      chatSettings:{
+        ownerWhatsAppNumber:'13027273842',
+        notificationEmail:'fixandchill1@gmail.com',
+        whatsappEnabled:'yes',
+        emailEnabled:'yes',
+        workStart:'10:00',
+        workEnd:'19:00'
+      },
       emailSettings:{
         provider:'',
         fromName:'Fix & Chill Phone Repair',
@@ -172,11 +195,77 @@
   function normalizeTicketStatus(status){
     const map = {
       'Part Ordered':'Item Ordered',
-      'Waiting for Part':'Item Ordered',
       'Part Received':'Item Received',
       'Completed':'Repair Completed'
     };
     return map[status] || status || 'Booked';
+  }
+
+  function partStatusLabel(status){
+    return ticketPartStatusLabels[status] || status || '';
+  }
+
+  function partStatusPill(status){
+    return statusPill(partStatusLabel(status));
+  }
+
+  function recordInventoryMovement(data, movement){
+    data.inventoryMovements = data.inventoryMovements || [];
+    data.inventoryMovements.push(Object.assign({
+      id:uid(),
+      createdAt:new Date().toISOString()
+    }, movement));
+  }
+
+  function ticketPartTicket(data, part){
+    return ticketById(data, part.ticketId);
+  }
+
+  function findMatchingInventoryForTicketPart(data, part){
+    const ticket = ticketPartTicket(data, part);
+    const brandId = ticket ? ticket.brandId : '';
+    const deviceModelId = ticket ? ticket.deviceModelId : '';
+    const category = String(part.repairType || '').trim().toLowerCase();
+    const partName = String(part.partName || '').trim().toLowerCase();
+    const supplier = String(part.supplierName || '').trim().toLowerCase();
+    return data.inventory.find(entry => {
+      const categoryMatch = categoryName(data, entry.partCategoryId).toLowerCase() === category;
+      const partMatch = String(entry.partName || '').trim().toLowerCase() === partName;
+      const supplierMatch = !supplier || String(entry.vendor || '').trim().toLowerCase() === supplier;
+      return (!brandId || entry.brandId === brandId) &&
+        (!deviceModelId || entry.deviceModelId === deviceModelId) &&
+        categoryMatch && partMatch && supplierMatch;
+    });
+  }
+
+  function findOrCreateInventoryForTicketPart(data, part){
+    const ticket = ticketPartTicket(data, part);
+    const brandId = ticket ? ticket.brandId : ensureBrand(data, 'Other');
+    const deviceModelId = ticket ? ticket.deviceModelId : ensureModel(data, brandId, part.deviceModel || 'Other', 'Phone');
+    const partCategoryId = ensureCategory(data, part.repairType || 'Other');
+    let item = findMatchingInventoryForTicketPart(data, part);
+    if(!item){
+      item = {
+        id:uid(),
+        brandId,
+        deviceModelId,
+        partCategoryId,
+        partName:part.partName,
+        qualityType:'',
+        sku:part.supplierSku || '',
+        barcode:'',
+        vendor:part.supplierName || '',
+        costPrice:part.actualCost || part.estimatedCost || '',
+        sellingPrice:'',
+        quantityInStock:0,
+        lowStockAlertQuantity:1,
+        shelfLocation:'',
+        notes:`Required for ticket ${ticket ? ticket.ticketNumber : ''}`.trim(),
+        createdAt:today()
+      };
+      data.inventory.push(item);
+    }
+    return item;
   }
 
   function categoryName(data, id){
@@ -184,7 +273,92 @@
   }
 
   function deviceLabel(data, brandId, modelId){
-    return `${brandName(data, brandId)} ${modelName(data, modelId)}`.trim();
+    const brand = brandName(data, brandId);
+    const model = modelName(data, modelId);
+    if(brand && model.toLowerCase().startsWith(`${brand.toLowerCase()} `)) return model;
+    return `${brand} ${model}`.trim();
+  }
+
+  function inferRepairCategory(issue){
+    const text = String(issue || '').toLowerCase();
+    if(/screen|glass|lcd|oled|display|crack/.test(text)) return 'Screen';
+    if(/battery|dies fast|drain|charging slow/.test(text)) return 'Battery';
+    if(/charging port|charge port|charger|not charging|usb/.test(text)) return 'Charging Port';
+    if(/back glass|rear glass/.test(text)) return 'Back Glass';
+    if(/camera/.test(text)) return text.includes('front') ? 'Front Camera' : 'Rear Camera';
+    if(/speaker|earpiece/.test(text)) return text.includes('ear') ? 'Earpiece Speaker' : 'Speaker';
+    if(/microphone|mic/.test(text)) return 'Microphone';
+    return 'Other';
+  }
+
+  function inventoryCheckForRequest(data, deviceModel, issue){
+    const modelText = String(deviceModel || '').trim().toLowerCase();
+    const categoryText = inferRepairCategory(issue).toLowerCase();
+    const matches = data.inventory.filter(item => {
+      const model = modelName(data, item.deviceModelId).toLowerCase();
+      const category = categoryName(data, item.partCategoryId).toLowerCase();
+      const part = String(item.partName || '').toLowerCase();
+      return modelText && model.includes(modelText.replace(/^samsung\s+|^apple\s+/i, '')) &&
+        (category === categoryText || part.includes(categoryText) || categoryText === 'other');
+    });
+    const inStock = matches.find(item => Number(item.quantityInStock || 0) > 0);
+    if(inStock){
+      return {
+        status:'in_stock',
+        label:`In stock: ${inStock.quantityInStock}`,
+        message:`${inStock.partName} appears available in inventory.`,
+        partName:inStock.partName,
+        quantity:Number(inStock.quantityInStock || 0),
+        supplier:inStock.vendor || '',
+        estimatedAvailability:'Available now'
+      };
+    }
+    if(matches.length){
+      const supplier = matches.find(item => item.vendor) || matches[0];
+      return {
+        status:'out_of_stock',
+        label:'Out of stock',
+        message:'Part is not currently in stock but can be ordered.',
+        partName:matches[0].partName,
+        quantity:0,
+        supplier:supplier.vendor || '',
+        estimatedAvailability:supplier.notes && /eta|arrival|shipping|day/i.test(supplier.notes) ? supplier.notes : 'Supplier availability needs confirmation'
+      };
+    }
+    return {
+      status:'not_found',
+      label:'Part not found in inventory',
+      message:'Requested part was not found in inventory. A technician should confirm availability.',
+      partName:'',
+      quantity:0,
+      supplier:'',
+      estimatedAvailability:'Unknown'
+    };
+  }
+
+  function withinWorkingHours(settings){
+    const now = new Date();
+    const [startHour, startMinute] = String(settings.workStart || '10:00').split(':').map(Number);
+    const [endHour, endMinute] = String(settings.workEnd || '19:00').split(':').map(Number);
+    const start = new Date(now);
+    start.setHours(startHour || 10, startMinute || 0, 0, 0);
+    const end = new Date(now);
+    end.setHours(endHour || 19, endMinute || 0, 0, 0);
+    return now >= start && now <= end;
+  }
+
+  function chatTranscriptText(conversation){
+    return (conversation.messages || []).map(message => `${message.sender}: ${message.text}`).join('\n');
+  }
+
+  function chatNeedsReview(data){
+    return data.chatConversations.filter(chat => chat.status === 'Needs Human Review');
+  }
+
+  function whatsappLink(settings, text){
+    const phone = String(settings.ownerWhatsAppNumber || '').replace(/\D/g, '');
+    if(!phone) return '';
+    return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
   }
 
   function normalizeData(data){
@@ -209,6 +383,12 @@
     data.tickets = data.tickets || [];
     data.orders = data.orders || [];
     data.usage = data.usage || [];
+    data.ticketParts = data.ticketParts || [];
+    data.inventoryMovements = data.inventoryMovements || [];
+    data.chatConversations = data.chatConversations || [];
+    data.chatLeads = data.chatLeads || [];
+    data.chatNotifications = data.chatNotifications || [];
+    data.chatSettings = Object.assign(defaults.chatSettings, data.chatSettings || {});
 
     data.tickets.forEach(ticket => {
       if(!ticket.brandId && ticket.deviceBrand) ticket.brandId = ensureBrand(data, ticket.deviceBrand);
@@ -250,6 +430,46 @@
       order.qualityType = order.qualityType || '';
       if(order.qualityType === 'High Capacity') order.qualityType = 'Genuine';
     });
+
+    data.ticketParts.forEach(part => {
+      const ticket = ticketPartTicket(data, part);
+      part.ticketNumber = part.ticketNumber || (ticket ? ticket.ticketNumber : '');
+      part.inventoryItemId = part.inventoryItemId || '';
+      part.inventory_item_id = part.inventory_item_id || '';
+      part.deviceModel = part.deviceModel || (ticket ? ticket.deviceModel : '');
+      part.repairType = part.repairType || part.partCategory || '';
+      part.quantityNeeded = Math.max(1, Number(part.quantityNeeded || part.quantity_needed || 1));
+      part.quantityReceived = Math.max(0, Number(part.quantityReceived || part.quantity_received || 0));
+      part.quantityUsed = Math.max(0, Number(part.quantityUsed || part.quantity_used || 0));
+      part.supplierName = part.supplierName || part.supplier_name || '';
+      part.supplierSku = part.supplierSku || part.supplier_sku || '';
+      part.estimatedCost = part.estimatedCost || part.estimated_cost || '';
+      part.actualCost = part.actualCost || part.actual_cost || '';
+      part.orderNumber = part.orderNumber || part.order_number || '';
+      part.trackingNumber = part.trackingNumber || part.tracking_number || '';
+      part.partStatus = part.partStatus || part.part_status || 'not_ordered';
+      part.notes = part.notes || '';
+      part.createdAt = part.createdAt || part.created_at || today();
+      part.updatedAt = part.updatedAt || part.updated_at || part.createdAt;
+      part.orderedAt = part.orderedAt || part.ordered_at || '';
+      part.deliveredAt = part.deliveredAt || part.delivered_at || '';
+      part.receivedAt = part.receivedAt || part.received_at || '';
+      part.usedAt = part.usedAt || part.used_at || '';
+    });
+    data.chatConversations.forEach(chat => {
+      chat.messages = chat.messages || [];
+      chat.status = chat.status || 'AI Chatting';
+      if(!chatStatuses.includes(chat.status)) chat.status = 'AI Chatting';
+      chat.customer = Object.assign({name:'', phone:'', deviceModel:'', issue:'', address:'', preferredTime:''}, chat.customer || {});
+      chat.inventoryResult = Object.assign({status:'unknown', label:'Unknown', message:'Inventory has not been checked yet.'}, chat.inventoryResult || {});
+      chat.summary = chat.summary || '';
+      chat.createdAt = chat.createdAt || today();
+      chat.updatedAt = chat.updatedAt || chat.createdAt;
+      chat.handoffReason = chat.handoffReason || '';
+      chat.aiEnabled = chat.aiEnabled !== false;
+      chat.ownerUnread = Boolean(chat.ownerUnread);
+      chat.customerUnread = Boolean(chat.customerUnread);
+    });
     return data;
   }
 
@@ -269,6 +489,7 @@
       data.emailLog = data.emailLog || [];
       data.notificationQueue = data.notificationQueue || [];
       data.emailSettings = Object.assign(defaultData().emailSettings, data.emailSettings || {});
+      data.chatSettings = Object.assign(defaultData().chatSettings, data.chatSettings || {});
       return data;
     }catch(e){
       return defaultData();
@@ -451,9 +672,9 @@
   }
 
   function statusPill(status){
-    const good = ['Received','Ready for Pickup','Repair Completed','Delivered','Item Received','Sent'].includes(status);
-    const bad = ['Cancelled'].includes(status);
-    const warn = ['Booked','Item Ordered','Ordered','Shipped','Draft','Scheduled','Expired'].includes(status);
+    const good = ['Received','Ready for Pickup','Repair Completed','Delivered','Item Received','Sent','AI Chatting'].includes(status) || String(status || '').startsWith('In Stock');
+    const bad = ['Cancelled','Out of Stock','Closed'].includes(status);
+    const warn = ['Booked','Item Ordered','Ordered','Shipped','Draft','Scheduled','Expired','Needs Human Review','Technician Joined'].includes(status);
     return `<span class="fc-pill ${good ? 'good' : bad ? 'bad' : warn ? 'warn' : ''}">${escapeHtml(status || '')}</span>`;
   }
 
@@ -563,7 +784,7 @@
       ticket.publicMessage ? `Message from shop: ${ticket.publicMessage}` : '',
       '',
       `Track your repair: ${location.origin}/track-repair/`,
-      `Use ticket number ${ticket.ticketNumber}, or use your phone number + last name.`,
+      `For privacy, use ticket number ${ticket.ticketNumber} plus your phone number or last name. You can also use phone number + last name.`,
       '',
       'Contact Fix & Chill Phone Repair:',
       '(302) 727-3842',
@@ -637,7 +858,9 @@
     const login = $('#fc-login');
     let data = loadData();
     let current = 'dashboard';
-    let editing = {customer:null,ticket:null,order:null,inventory:null,campaign:null};
+    let editing = {customer:null,ticket:null,order:null,inventory:null,campaign:null,ticketPart:null};
+    let selectedChatId = '';
+    let lastHandoffCount = chatNeedsReview(data).length;
     let campaignTimer = null;
 
     function signedIn(){
@@ -692,8 +915,11 @@
       renderDashboard();
       renderCustomers();
       renderTickets();
+      renderRequiredParts();
+      renderPartsWaiting();
       renderOrders();
       renderInventory();
+      renderChatInbox();
       renderCampaigns();
       renderSearch();
       populateAllSelects();
@@ -716,6 +942,8 @@
       populateSelect($('#order-inventory-part'), orderCompatible, item => item.id, item => inventoryPartLabel(data, item), $('#order-inventory-part').value);
       populateSelect($('#install-order'), data.orders.filter(order => order.status === 'Received' && !order.installedApplied), order => order.id, order => `${order.ticketNumber} - ${order.partName}`, $('#install-order').value);
       populateSelect($('#ticket-part-ticket'), data.tickets, ticket => ticket.id, ticketLabel, $('#ticket-part-ticket').value);
+      populateSelect($('#required-part-ticket'), data.tickets, ticket => ticket.id, ticketLabel, $('#required-part-ticket') ? $('#required-part-ticket').value : '');
+      populatePlainSelect($('#required-part-status'), ticketPartStatuses, $('#required-part-status') ? $('#required-part-status').value || 'not_ordered' : 'not_ordered');
       populateSelect($('#ticket-part-category'), data.partCategories, category => category.id, category => category.categoryName, $('#ticket-part-category').value);
       const selectedTicket = ticketById(data, $('#ticket-part-ticket') ? $('#ticket-part-ticket').value : '');
       populateSelect($('#ticket-part-inventory'), compatibleInventoryParts(data, selectedTicket, $('#ticket-part-category') ? $('#ticket-part-category').value : ''), item => item.id, item => inventoryPartLabel(data, item), $('#ticket-part-inventory') ? $('#ticket-part-inventory').value : '');
@@ -748,13 +976,20 @@
       const received = data.orders.filter(order => order.status === 'Received' && !order.installedApplied).length;
       const ready = data.tickets.filter(ticket => ticket.status === 'Ready for Pickup').length;
       const low = data.inventory.filter(item => Number(item.quantityInStock || 0) <= Number(item.lowStockAlertQuantity || 0));
+      const handoffs = chatNeedsReview(data).length;
       $('#dashboard-stats').innerHTML = [
         ['Total active repairs', activeRepairs],
         ['Repairs waiting for parts', waiting],
         ['Parts received', received],
         ['Ready for pickup', ready],
-        ['Low stock items', low.length]
-      ].map(([label, value]) => `<div class="fc-card fc-stat"><strong>${value}</strong><span>${label}</span></div>`).join('');
+        ['Low stock items', low.length],
+        ['Chat handoffs waiting', handoffs]
+      ].map(([label, value]) => `<div class="fc-card fc-stat${label.includes('Chat') && value ? ' fc-notification-card' : ''}"><strong>${value}</strong><span>${label}</span></div>`).join('');
+      const badge = $('#chat-nav-badge');
+      if(badge){
+        badge.textContent = handoffs;
+        badge.hidden = !handoffs;
+      }
       $('#recent-tickets').innerHTML = ticketRows(data.tickets.slice().reverse().slice(0, 8));
       $('#low-stock-list').innerHTML = low.length ? low.map(item => `<tr><td>${escapeHtml(item.partName)}</td><td>${escapeHtml(brandName(data, item.brandId))}</td><td>${escapeHtml(modelName(data, item.deviceModelId))}</td><td>${item.quantityInStock}</td><td>${item.lowStockAlertQuantity}</td></tr>`).join('') : '<tr><td colspan="5">No low stock warnings.</td></tr>';
     }
@@ -825,7 +1060,7 @@
           <td>${escapeHtml(ticket.estimatedCompletion)}</td>
           <td>$${money(ticket.estimatedPrice)}</td>
           <td>$${money(ticket.finalPrice)}</td>
-          <td>$${money(payment.amountPaid)}</td>
+          <td>${escapeHtml(ticket.paymentType || 'No payment collected')}<br>$${money(payment.amountPaid)}</td>
           <td>${escapeHtml(payment.refundType)}<br>$${money(payment.refundAmount)}</td>
           <td>$${money(payment.netPaid)}</td>
           <td>${escapeHtml(ticket.createdAt)}</td>
@@ -844,6 +1079,70 @@
         return [ticket.ticketNumber, modelName(data, ticket.deviceModelId), brandName(data, ticket.brandId), ticket.deviceModel, ticket.deviceBrand, customer && customer.fullName, customer && customer.phone].join(' ').toLowerCase().includes(query);
       });
       $('#tickets-table').innerHTML = ticketRows(tickets);
+    }
+
+    function requiredPartRows(parts, includeCustomer=false){
+      if(!parts.length) return `<tr><td colspan="11">No required parts found.</td></tr>`;
+      return parts.map(part => {
+        const ticket = ticketPartTicket(data, part);
+        const customer = ticket ? customerById(data, ticket.customerId) : null;
+        const stockItem = part.inventoryItemId ? data.inventory.find(entry => entry.id === part.inventoryItemId) : findMatchingInventoryForTicketPart(data, part);
+        const stockQty = stockItem ? Number(stockItem.quantityInStock || 0) : 0;
+        const neededQty = Math.max(1, Number(part.quantityNeeded || 1));
+        const hasStock = stockQty >= neededQty;
+        const stockLabel = hasStock ? statusPill(`In Stock: ${stockQty}`) : statusPill('Out of Stock');
+        const canOrder = part.partStatus === 'not_ordered';
+        const canDeliver = part.partStatus === 'ordered';
+        const canReceive = part.partStatus === 'delivered';
+        const canUse = part.partStatus === 'received_into_inventory';
+        const actions = `
+          ${canOrder ? `<button class="fc-btn secondary" data-part-action="ordered" data-ticket-part="${part.id}">Order Part</button>` : ''}
+          ${canDeliver ? `<button class="fc-btn secondary" data-part-action="delivered" data-ticket-part="${part.id}">Mark as Delivered</button>` : ''}
+          ${canReceive ? `<button class="fc-btn accent" data-part-action="receive" data-ticket-part="${part.id}">Receive Into Inventory</button>` : ''}
+          ${hasStock && part.partStatus !== 'used_for_repair' && part.partStatus !== 'cancelled' ? `<button class="fc-btn accent" data-part-action="${canUse ? 'use' : 'use-existing'}" data-ticket-part="${part.id}">${canUse ? 'Use Part for Repair' : 'Use Existing Stock'}</button>` : ''}
+          ${part.partStatus !== 'used_for_repair' && part.partStatus !== 'cancelled' ? `<button class="fc-btn danger" data-part-action="cancelled" data-ticket-part="${part.id}">Cancel</button>` : ''}
+          <button class="fc-btn secondary" data-edit-ticket-part="${part.id}">Edit</button>`;
+        if(includeCustomer){
+          return `<tr>
+            <td>${escapeHtml(ticket ? ticket.ticketNumber : part.ticketNumber)}</td>
+            <td>${escapeHtml(fullName(customer))}<br><span class="fc-muted">${escapeHtml(customer ? customer.phone : '')}</span></td>
+            <td>${escapeHtml(ticket ? deviceLabel(data, ticket.brandId, ticket.deviceModelId) : part.deviceModel)}</td>
+            <td>${escapeHtml(part.partName)}<br><span class="fc-muted">${escapeHtml(part.supplierSku)}</span></td>
+            <td>${escapeHtml(part.repairType)}</td>
+            <td>${escapeHtml(part.quantityNeeded)}</td>
+            <td>${escapeHtml(part.supplierName)}</td>
+            <td>${partStatusPill(part.partStatus)}</td>
+            <td>${stockLabel}</td>
+            <td>${escapeHtml(part.trackingNumber)}</td>
+            <td class="fc-actions">${actions}</td>
+          </tr>`;
+        }
+        return `<tr>
+          <td>${escapeHtml(ticket ? ticketLabel(ticket) : part.ticketNumber)}</td>
+          <td>${escapeHtml(part.partName)}<br><span class="fc-muted">${escapeHtml(part.deviceModel)}</span></td>
+          <td>${escapeHtml(part.repairType)}</td>
+          <td>${escapeHtml(part.quantityNeeded)}</td>
+          <td>${escapeHtml(part.quantityReceived)}</td>
+          <td>${escapeHtml(part.quantityUsed)}</td>
+          <td>${escapeHtml(part.supplierName)}<br><span class="fc-muted">${escapeHtml(part.supplierSku)}</span></td>
+          <td>${partStatusPill(part.partStatus)}</td>
+          <td>${stockLabel}</td>
+          <td>Ordered: ${escapeHtml(part.orderedAt || '-')}<br>Delivered: ${escapeHtml(part.deliveredAt || '-')}<br>Received: ${escapeHtml(part.receivedAt || '-')}<br>Used: ${escapeHtml(part.usedAt || '-')}</td>
+          <td class="fc-actions">${actions}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    function renderRequiredParts(){
+      const table = $('#ticket-required-parts-table');
+      if(table) table.innerHTML = requiredPartRows(data.ticketParts.slice().reverse());
+    }
+
+    function renderPartsWaiting(){
+      const table = $('#parts-waiting-table');
+      if(!table) return;
+      const waiting = data.ticketParts.filter(part => ['not_ordered','ordered','delivered'].includes(part.partStatus));
+      table.innerHTML = requiredPartRows(waiting, true);
     }
 
     function updateTicketPaymentFields(){
@@ -909,6 +1208,104 @@
     });
 
     $('#ticket-search').addEventListener('input', renderTickets);
+
+    $('#ticket-required-part-form').addEventListener('submit', event => {
+      event.preventDefault();
+      data = loadData();
+      const values = formToObject(event.currentTarget);
+      const ticket = ticketById(data, values.ticketId);
+      const message = $('#required-part-message');
+      if(!ticket){
+        message.className = 'wide fc-alert bad';
+        message.textContent = 'Choose a repair ticket first.';
+        message.hidden = false;
+        return;
+      }
+      values.ticketNumber = ticket.ticketNumber;
+      values.deviceModel = values.deviceModel || ticket.deviceModel || modelName(data, ticket.deviceModelId);
+      values.quantityNeeded = Math.max(1, Number(values.quantityNeeded || 1));
+      values.quantityReceived = Math.max(0, Number(values.quantityReceived || 0));
+      values.quantityUsed = Math.max(0, Number(values.quantityUsed || 0));
+      values.partStatus = values.partStatus || 'not_ordered';
+      values.updatedAt = new Date().toISOString();
+      if(editing.ticketPart){
+        Object.assign(data.ticketParts.find(part => part.id === editing.ticketPart), values);
+      }else{
+        data.ticketParts.push(Object.assign({id:uid(), inventoryItemId:'', supplierId:'', createdAt:new Date().toISOString(), orderedAt:'', deliveredAt:'', receivedAt:'', usedAt:''}, values));
+      }
+      saveData(data);
+      editing.ticketPart = null;
+      $('#required-part-submit').textContent = 'Save Required Part';
+      event.currentTarget.reset();
+      $('#required-part-status').value = 'not_ordered';
+      message.className = 'wide fc-alert good';
+      message.textContent = 'Required part saved. Part is not in stock. You can still create this ticket.';
+      message.hidden = false;
+      render();
+    });
+
+    $('#required-part-reset').addEventListener('click', () => {
+      editing.ticketPart = null;
+      $('#required-part-submit').textContent = 'Save Required Part';
+      $('#ticket-required-part-form').reset();
+      $('#required-part-status').value = 'not_ordered';
+    });
+
+    function applyTicketPartAction(partId, action){
+      const part = data.ticketParts.find(entry => entry.id === partId);
+      if(!part) return {ok:false, message:'Required part not found.'};
+      const now = new Date().toISOString();
+      if(action === 'ordered'){
+        part.partStatus = 'ordered';
+        part.orderedAt = part.orderedAt || now;
+        const ticket = ticketPartTicket(data, part);
+        if(ticket) ticket.status = 'Waiting for Part';
+      }else if(action === 'delivered'){
+        part.partStatus = 'delivered';
+        part.deliveredAt = part.deliveredAt || now;
+        const ticket = ticketPartTicket(data, part);
+        if(ticket) ticket.status = 'Item Received';
+      }else if(action === 'receive'){
+        const item = findOrCreateInventoryForTicketPart(data, part);
+        const qty = Math.max(1, Number(part.quantityReceived || part.quantityNeeded || 1));
+        item.quantityInStock = Number(item.quantityInStock || 0) + qty;
+        part.inventoryItemId = item.id;
+        part.quantityReceived = qty;
+        part.partStatus = 'received_into_inventory';
+        part.receivedAt = part.receivedAt || now;
+        recordInventoryMovement(data, {type:'receive_ticket_part', inventoryItemId:item.id, ticketPartId:part.id, ticketId:part.ticketId, ticketNumber:part.ticketNumber, quantity:qty, partName:part.partName});
+      }else if(action === 'use' || action === 'use-existing'){
+        const item = part.inventoryItemId ? data.inventory.find(entry => entry.id === part.inventoryItemId) : findMatchingInventoryForTicketPart(data, part);
+        const qty = Math.max(1, Number(part.quantityUsed || part.quantityNeeded || 1));
+        if(!item || Number(item.quantityInStock || 0) < qty) return {ok:false, message:'Not enough stock. Inventory cannot go negative.'};
+        item.quantityInStock = Number(item.quantityInStock || 0) - qty;
+        part.inventoryItemId = item.id;
+        part.quantityUsed = qty;
+        part.partStatus = 'used_for_repair';
+        part.usedAt = part.usedAt || now;
+        const ticket = ticketPartTicket(data, part);
+        if(ticket) ticket.status = 'Repair Completed';
+        data.usage.push({
+          id:uid(),
+          inventoryItemId:item.id,
+          orderId:'',
+          ticketPartId:part.id,
+          ticketId:part.ticketId,
+          ticketNumber:part.ticketNumber,
+          brandId:item.brandId,
+          deviceModelId:item.deviceModelId,
+          partCategoryId:item.partCategoryId,
+          partName:item.partName,
+          quantity:qty,
+          usedAt:today()
+        });
+        recordInventoryMovement(data, {type:'use_ticket_part', inventoryItemId:item.id, ticketPartId:part.id, ticketId:part.ticketId, ticketNumber:part.ticketNumber, quantity:-qty, partName:part.partName});
+      }else if(action === 'cancelled'){
+        part.partStatus = 'cancelled';
+      }
+      part.updatedAt = now;
+      return {ok:true, message:`Part status updated to ${partStatusLabel(part.partStatus)}.`};
+    }
 
     function orderRows(orders){
       if(!orders.length) return '<tr><td colspan="11">No part orders yet.</td></tr>';
@@ -1348,6 +1745,111 @@
         <div class="fc-table-wrap"><table class="fc-table"><tbody>${pending.length ? pending.slice().reverse().map(item => `<tr><td>${escapeHtml(item.createdAt)}</td><td>${escapeHtml(item.ticketNumber)}</td><td>${escapeHtml(item.customerName)}</td><td>${escapeHtml(item.email)}</td><td>${escapeHtml(item.status)}</td></tr>`).join('') : '<tr><td>No pending repair email notifications.</td></tr>'}</tbody></table></div>`;
     }
 
+    function chatWhatsappMessage(chat){
+      return [
+        'Fix & Chill chat handoff',
+        `Customer: ${chat.customer.name || 'Unknown'}`,
+        `Phone: ${chat.customer.phone || 'Not provided'}`,
+        `Device: ${chat.customer.deviceModel || 'Not clear'}`,
+        `Issue: ${chat.customer.issue || 'Not clear'}`,
+        `Inventory: ${chat.inventoryResult.label || chat.inventoryResult.message || 'Unknown'}`,
+        `Preferred time: ${chat.customer.preferredTime || 'Not provided'}`,
+        `Summary: ${chat.summary || 'No summary yet'}`,
+        `Open admin: ${location.origin}/admin/#chat-${chat.id}`
+      ].join('\n');
+    }
+
+    function chatRows(chats){
+      if(!chats.length) return '<tr><td colspan="6">No chatbot conversations yet.</td></tr>';
+      return chats.map(chat => `<tr>
+        <td><strong>${escapeHtml(chat.customer.name || 'Unknown')}</strong><br><span class="fc-muted">${escapeHtml(chat.customer.phone || '')}</span></td>
+        <td>${escapeHtml(chat.customer.deviceModel || 'Device unclear')}<br><span class="fc-muted">${escapeHtml(chat.customer.issue || '')}</span></td>
+        <td>${statusPill(chat.inventoryResult.label || 'Unknown')}<br><span class="fc-muted">${escapeHtml(chat.inventoryResult.estimatedAvailability || '')}</span></td>
+        <td>${statusPill(chat.status)}</td>
+        <td>${escapeHtml(String(chat.updatedAt || '').slice(0, 19).replace('T', ' '))}</td>
+        <td class="fc-actions">
+          <button class="fc-btn secondary" data-open-chat="${chat.id}">Open</button>
+          ${chat.status !== 'Closed' ? `<button class="fc-btn danger" data-close-chat="${chat.id}">Close</button>` : ''}
+        </td>
+      </tr>`).join('');
+    }
+
+    function renderChatDetail(chat){
+      const detail = $('#chat-detail');
+      if(!detail) return;
+      if(!chat){
+        detail.innerHTML = '<h2>Conversation Detail</h2><p class="fc-muted">Open a conversation to view transcript, summary, lead details, and handoff controls.</p>';
+        return;
+      }
+      const whatsapp = whatsappLink(data.chatSettings, chatWhatsappMessage(chat));
+      const transcript = chat.messages.length ? chat.messages.map(message => `<div class="fc-chat-line ${escapeHtml(message.sender)}"><strong>${escapeHtml(message.sender)} · ${escapeHtml(String(message.at || '').slice(0, 19).replace('T', ' '))}</strong>${escapeHtml(message.text)}</div>`).join('') : '<p class="fc-muted">No messages yet.</p>';
+      detail.innerHTML = `
+        <div class="fc-topline">
+          <div>
+            <h2>${escapeHtml(chat.customer.name || 'Chat Conversation')}</h2>
+            <p class="fc-muted">${escapeHtml(chat.customer.phone || '')} · ${escapeHtml(chat.customer.deviceModel || 'Device unclear')}</p>
+          </div>
+          ${whatsapp ? `<a class="fc-btn accent" href="${escapeHtml(whatsapp)}" target="_blank" rel="noopener noreferrer">Open WhatsApp</a>` : ''}
+        </div>
+        <div class="fc-grid two">
+          <div class="fc-result-item"><span>Status</span><strong>${statusPill(chat.status)}</strong></div>
+          <div class="fc-result-item"><span>Inventory</span><strong>${escapeHtml(chat.inventoryResult.message || chat.inventoryResult.label || 'Unknown')}</strong></div>
+          <div class="fc-result-item"><span>Preferred time</span><strong>${escapeHtml(chat.customer.preferredTime || 'Not provided')}</strong></div>
+          <div class="fc-result-item"><span>Handoff reason</span><strong>${escapeHtml(chat.handoffReason || 'None')}</strong></div>
+        </div>
+        <h3>AI Summary</h3>
+        <p>${escapeHtml(chat.summary || 'No summary yet.')}</p>
+        <h3>Full Transcript</h3>
+        <div class="fc-transcript">${transcript}</div>
+        <div class="fc-actions" style="margin-top:12px">
+          <button class="fc-btn" type="button" data-takeover-chat="${chat.id}">Take Over Conversation</button>
+          <button class="fc-btn secondary" type="button" data-return-ai-chat="${chat.id}">Return to AI</button>
+          <button class="fc-btn danger" type="button" data-close-chat="${chat.id}">Close</button>
+        </div>
+        <form class="fc-chat-compose" data-chat-reply-form="${chat.id}">
+          <textarea name="message" placeholder="Type a technician message to the customer"></textarea>
+          <button class="fc-btn accent" type="submit">Send</button>
+        </form>
+        <h3>Queued Notifications</h3>
+        <div class="fc-table-wrap"><table class="fc-table"><tbody>${data.chatNotifications.filter(item => item.chatId === chat.id).slice().reverse().map(item => `<tr><td>${escapeHtml(item.createdAt)}</td><td>${escapeHtml(item.type)}</td><td>${escapeHtml(item.status)}</td><td>${escapeHtml(item.destination || '')}</td></tr>`).join('') || '<tr><td>No notifications queued for this conversation.</td></tr>'}</tbody></table></div>`;
+    }
+
+    function renderChatInbox(){
+      if(!$('#chat-conversations-table')) return;
+      const settingsForm = $('#chat-settings-form');
+      if(settingsForm && document.activeElement && !settingsForm.contains(document.activeElement)) fillForm(settingsForm, data.chatSettings);
+      const query = ($('#chat-search') ? $('#chat-search').value : '').toLowerCase().trim();
+      const status = $('#chat-status-filter') ? $('#chat-status-filter').value : '';
+      const chats = data.chatConversations.filter(chat => {
+        const haystack = [chat.customer.name, chat.customer.phone, chat.customer.deviceModel, chat.customer.issue, chat.summary, chat.inventoryResult.label].join(' ').toLowerCase();
+        return (!query || haystack.includes(query)) && (!status || chat.status === status);
+      }).sort((a, b) => String(b.updatedAt || '').localeCompare(String(a.updatedAt || '')));
+      $('#chat-conversations-table').innerHTML = chatRows(chats);
+      const waiting = chatNeedsReview(data).length;
+      const active = data.chatConversations.filter(chat => chat.status === 'AI Chatting').length;
+      const tech = data.chatConversations.filter(chat => chat.status === 'Technician Joined').length;
+      const closed = data.chatConversations.filter(chat => chat.status === 'Closed').length;
+      if($('#chat-stats')) $('#chat-stats').innerHTML = [
+        ['Needs Human Review', waiting],
+        ['AI Chatting', active],
+        ['Technician Joined', tech],
+        ['Closed', closed]
+      ].map(([label, value]) => `<div class="fc-card fc-stat"><strong>${value}</strong><span>${label}</span></div>`).join('');
+      if(waiting > lastHandoffCount){
+        if(window.Notification && Notification.permission === 'granted') new Notification('Fix & Chill chat handoff', {body:'A customer is waiting for human review.'});
+        try{
+          const audio = new (window.AudioContext || window.webkitAudioContext)();
+          const osc = audio.createOscillator();
+          osc.connect(audio.destination);
+          osc.frequency.value = 880;
+          osc.start();
+          setTimeout(() => { osc.stop(); audio.close(); }, 140);
+        }catch(e){}
+      }
+      lastHandoffCount = waiting;
+      renderChatDetail(data.chatConversations.find(chat => chat.id === selectedChatId));
+    }
+
     function renderCampaignDetail(campaignId){
       const detail = $('#campaign-detail');
       const campaign = data.campaigns.find(entry => entry.id === campaignId);
@@ -1389,6 +1891,48 @@
         <h3>Email Preview</h3>
         <div class="fc-email-preview">${escapeHtml(sent[0] ? sent[0].emailBody : campaignEmailBody(campaign, targets[0] || {id:'preview', fullName:'Customer', email:''}))}</div>`;
     }
+
+    if($('#chat-settings-form')) $('#chat-settings-form').addEventListener('submit', event => {
+      event.preventDefault();
+      data = loadData();
+      data.chatSettings = Object.assign(data.chatSettings || {}, formToObject(event.currentTarget));
+      saveData(data);
+      const message = $('#chat-settings-message');
+      message.className = 'wide fc-alert good';
+      message.textContent = 'Chat notification settings saved. WhatsApp/email delivery is queued until a provider is connected.';
+      message.hidden = false;
+      render();
+    });
+
+    if($('#chat-search')) $('#chat-search').addEventListener('input', renderChatInbox);
+    if($('#chat-status-filter')) $('#chat-status-filter').addEventListener('change', renderChatInbox);
+    if($('#enable-browser-notifications')) $('#enable-browser-notifications').addEventListener('click', async () => {
+      if(!window.Notification){
+        alert('Browser notifications are not supported in this browser.');
+        return;
+      }
+      const permission = await Notification.requestPermission();
+      alert(permission === 'granted' ? 'Browser notifications enabled.' : 'Browser notifications were not enabled.');
+    });
+
+    document.addEventListener('submit', event => {
+      const form = event.target;
+      if(!form.dataset.chatReplyForm) return;
+      event.preventDefault();
+      data = loadData();
+      const chat = data.chatConversations.find(entry => entry.id === form.dataset.chatReplyForm);
+      const message = String(form.elements.message.value || '').trim();
+      if(!chat || !message) return;
+      chat.messages.push({sender:'owner', text:message, at:new Date().toISOString()});
+      chat.status = 'Technician Joined';
+      chat.aiEnabled = false;
+      chat.customerUnread = true;
+      chat.updatedAt = new Date().toISOString();
+      saveData(data);
+      form.reset();
+      selectedChatId = chat.id;
+      render();
+    });
 
     $('#campaign-target').addEventListener('change', renderManualCustomerPicker);
     $('#campaign-form').addEventListener('input', renderCampaignBrochurePreview);
@@ -1470,9 +2014,11 @@
       data = loadData();
       const customerId = target.dataset.editCustomer || target.dataset.deleteCustomer;
       const ticketId = target.dataset.editTicket || target.dataset.deleteTicket;
+      const ticketPartId = target.dataset.ticketPart || target.dataset.editTicketPart;
       const orderId = target.dataset.editOrder || target.dataset.deleteOrder || target.dataset.installOrder;
       const inventoryId = target.dataset.editInventory || target.dataset.deleteInventory;
       const campaignId = target.dataset.viewCampaign || target.dataset.editCampaign || target.dataset.cancelCampaign || target.dataset.deleteCampaign;
+      const chatId = target.dataset.openChat || target.dataset.takeoverChat || target.dataset.returnAiChat || target.dataset.closeChat;
       if(target.dataset.editCustomer){
         editing.customer = customerId;
         fillForm($('#customer-form'), customerById(data, customerId));
@@ -1498,7 +2044,34 @@
       if(target.dataset.deleteTicket && confirm('Delete this repair ticket?')){
         data.tickets = data.tickets.filter(ticket => ticket.id !== ticketId);
         data.orders = data.orders.filter(order => order.ticketId !== ticketId);
+        data.ticketParts = data.ticketParts.filter(part => part.ticketId !== ticketId);
         saveData(data); render();
+      }
+      if(target.dataset.editTicketPart){
+        const part = data.ticketParts.find(entry => entry.id === ticketPartId);
+        if(part){
+          editing.ticketPart = ticketPartId;
+          fillForm($('#ticket-required-part-form'), part);
+          populateAllSelects();
+          fillForm($('#ticket-required-part-form'), part);
+          $('#required-part-submit').textContent = 'Update Required Part';
+          current = 'tickets';
+          render();
+          fillForm($('#ticket-required-part-form'), part);
+          $('#required-part-submit').textContent = 'Update Required Part';
+          $('#ticket-required-part-form').scrollIntoView({behavior:'smooth', block:'start'});
+        }
+      }
+      if(target.dataset.partAction){
+        const result = applyTicketPartAction(ticketPartId, target.dataset.partAction);
+        saveData(data);
+        render();
+        const message = $('#required-part-message');
+        if(message){
+          message.className = `wide fc-alert ${result.ok ? 'good' : 'bad'}`;
+          message.textContent = result.message;
+          message.hidden = false;
+        }
       }
       if(target.dataset.editOrder){
         editing.order = orderId;
@@ -1528,6 +2101,46 @@
       if(target.dataset.deleteInventory && confirm('Delete this inventory item?')){
         data.inventory = data.inventory.filter(item => item.id !== inventoryId);
         saveData(data); render();
+      }
+      if(target.dataset.openChat){
+        selectedChatId = chatId;
+        current = 'chat-inbox';
+        const chat = data.chatConversations.find(entry => entry.id === chatId);
+        if(chat) chat.ownerUnread = false;
+        saveData(data);
+        render();
+      }
+      if(target.dataset.takeoverChat){
+        const chat = data.chatConversations.find(entry => entry.id === chatId);
+        if(chat){
+          selectedChatId = chat.id;
+          chat.status = 'Technician Joined';
+          chat.aiEnabled = false;
+          chat.messages.push({sender:'system', text:'Technician joined the conversation.', at:new Date().toISOString()});
+          chat.updatedAt = new Date().toISOString();
+          saveData(data); render();
+        }
+      }
+      if(target.dataset.returnAiChat){
+        const chat = data.chatConversations.find(entry => entry.id === chatId);
+        if(chat){
+          selectedChatId = chat.id;
+          chat.status = 'AI Chatting';
+          chat.aiEnabled = true;
+          chat.messages.push({sender:'system', text:'AI assistant is back to help with the next steps.', at:new Date().toISOString()});
+          chat.updatedAt = new Date().toISOString();
+          saveData(data); render();
+        }
+      }
+      if(target.dataset.closeChat){
+        const chat = data.chatConversations.find(entry => entry.id === chatId);
+        if(chat){
+          selectedChatId = chat.id;
+          chat.status = 'Closed';
+          chat.aiEnabled = false;
+          chat.updatedAt = new Date().toISOString();
+          saveData(data); render();
+        }
       }
       if(target.dataset.viewCampaign){
         renderCampaignDetail(campaignId);
@@ -1579,6 +2192,10 @@
       alert('Workflow test data created through Step 4. Edit the order to Received, then install it to complete Steps 5-8.');
     });
 
+    if(location.hash && location.hash.startsWith('#chat-')){
+      selectedChatId = location.hash.replace('#chat-', '');
+      current = 'chat-inbox';
+    }
     showApp();
   }
 
@@ -1593,11 +2210,14 @@
       const values = formToObject(form);
       const ticketNumber = values.ticketNumber.toUpperCase();
       const phone = values.phone.replace(/\D/g, '');
-      const name = values.lastName.toLowerCase();
+      const name = values.lastName.toLowerCase().trim();
       const ticket = data.tickets.find(entry => {
         const customer = customerById(data, entry.customerId);
-        if(ticketNumber && entry.ticketNumber.toUpperCase() === ticketNumber) return true;
-        return customer && phone && name && customer.phone.replace(/\D/g, '').includes(phone) && lastName(customer.fullName) === name;
+        if(!customer) return false;
+        const phoneMatches = phone && customer.phone.replace(/\D/g, '').includes(phone);
+        const lastNameMatches = name && lastName(customer.fullName) === name;
+        const ticketMatches = ticketNumber && entry.ticketNumber.toUpperCase() === ticketNumber;
+        return (ticketMatches && (phoneMatches || lastNameMatches)) || (phoneMatches && lastNameMatches);
       });
       if(!ticket){
         result.hidden = true;
