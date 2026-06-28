@@ -92,8 +92,8 @@
       <section id="section-tickets" class="fc-section fc-stack">
         <form id="ticket-form" class="fc-card fc-form three">
           <h2 class="wide">Repair Ticket System</h2>
-          <label class="wide">Search existing customer <input id="ticket-customer-search" type="search" placeholder="Type name, phone, or email. Select shows up to 5 matches."><span id="ticket-customer-search-message" class="fc-muted"></span></label>
-          <label>Customer <select id="ticket-customer" name="customerId" required></select></label>
+          <label>Customer <select id="ticket-customer" name="customerId" required></select><span class="fc-muted">Shows the latest 5 customers first.</span></label>
+          <label class="wide">Search existing customer <input id="ticket-customer-search" type="search" placeholder="Search older customers by name, phone, or email"><span id="ticket-customer-search-message" class="fc-muted"></span></label>
           <label>Device brand <select id="ticket-brand" name="brandId" required></select></label>
           <label>Search model <input id="ticket-model-search" type="search" placeholder="Search iPhone 13, 15 Pro Max, Galaxy..."></label>
           <label>Device model <select id="ticket-model" name="deviceModelId" required></select></label>

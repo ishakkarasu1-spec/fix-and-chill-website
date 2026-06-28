@@ -570,6 +570,14 @@
     return `${customer.fullName} (${customer.phone || 'no phone'})`;
   }
 
+  function customerSearchText(customer){
+    return [customer.fullName, customer.phone, customer.email].join(' ').toLowerCase();
+  }
+
+  function recentCustomers(data, limit = 5){
+    return data.customers.slice(-limit).reverse();
+  }
+
   function ticketById(data, id){
     return data.tickets.find(ticket => ticket.id === id);
   }
@@ -1004,21 +1012,31 @@
     }
 
     function populateAllSelects(){
-      const ticketCustomerQuery = $('#ticket-customer-search') ? $('#ticket-customer-search').value.toLowerCase() : '';
-      const matchingTicketCustomers = data.customers.filter(customer => !ticketCustomerQuery || [customer.fullName, customer.phone, customer.email].join(' ').toLowerCase().includes(ticketCustomerQuery));
-      let ticketCustomers = matchingTicketCustomers.slice(0, 5);
-      const selectedTicketCustomer = $('#ticket-customer') ? $('#ticket-customer').value : '';
+      const ticketCustomerQuery = $('#ticket-customer-search') ? $('#ticket-customer-search').value.trim().toLowerCase() : '';
+      const matchingTicketCustomers = ticketCustomerQuery
+        ? data.customers.filter(customer => customerSearchText(customer).includes(ticketCustomerQuery))
+        : [];
+      let ticketCustomers = ticketCustomerQuery ? matchingTicketCustomers.slice(0, 5) : recentCustomers(data, 5);
+      let selectedTicketCustomer = $('#ticket-customer') ? $('#ticket-customer').value : '';
+      if(ticketCustomerQuery && selectedTicketCustomer){
+        const selectedCustomer = customerById(data, selectedTicketCustomer);
+        if(selectedCustomer && !customerSearchText(selectedCustomer).includes(ticketCustomerQuery)){
+          selectedTicketCustomer = '';
+        }
+      }
       if(selectedTicketCustomer && !ticketCustomers.some(customer => customer.id === selectedTicketCustomer)){
         const selectedCustomer = customerById(data, selectedTicketCustomer);
         if(selectedCustomer) ticketCustomers = [selectedCustomer].concat(ticketCustomers).slice(0, 5);
       }
       populateSelect($('#ticket-customer'), ticketCustomers, customer => customer.id, customerLabel, selectedTicketCustomer);
       if($('#ticket-customer-search-message')){
-        $('#ticket-customer-search-message').textContent = matchingTicketCustomers.length > 5
-          ? `Showing first 5 of ${matchingTicketCustomers.length} matches. Keep typing to narrow the list.`
-          : matchingTicketCustomers.length
-            ? `Showing ${matchingTicketCustomers.length} matching customer${matchingTicketCustomers.length === 1 ? '' : 's'}.`
-            : 'No matching customer found. Add the customer first if this is a new customer.';
+        $('#ticket-customer-search-message').textContent = ticketCustomerQuery
+          ? (matchingTicketCustomers.length > 5
+            ? `Showing first 5 of ${matchingTicketCustomers.length} matches in the customer select. Keep typing to narrow the list.`
+            : matchingTicketCustomers.length
+              ? `Showing ${matchingTicketCustomers.length} matching customer${matchingTicketCustomers.length === 1 ? '' : 's'} in the customer select.`
+              : 'No matching customer found. Add the customer first if this is a new customer.')
+          : 'Customer select shows the latest 5 customers. Use search here to find older customers.';
       }
       populateSelect($('#ticket-brand'), data.brands, brand => brand.id, brand => brand.brandName, $('#ticket-brand').value);
       populateModelsForBrand($('#ticket-model'), data, $('#ticket-brand').value, $('#ticket-model').value, $('#ticket-model-search') ? $('#ticket-model-search').value : '');
