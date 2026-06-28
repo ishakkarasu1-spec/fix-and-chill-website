@@ -58,6 +58,7 @@
   const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
   const money = value => value === '' || value == null ? '' : Number(value).toFixed(2);
   const toMoneyNumber = value => Math.max(0, Number(value || 0) || 0);
+  let draftTicketItems = [];
   const slug = value => String(value || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || uid();
   const normalizePhone = value => String(value || '').replace(/\D/g, '');
   const normalizeEmail = value => String(value || '').trim().toLowerCase();
@@ -174,7 +175,7 @@
   }
 
   function calculateTicketPayments(ticket){
-    const finalPrice = toMoneyNumber(ticket.finalPrice);
+    const finalPrice = ticketTotalAmount(ticket);
     const savedAmountPaid = toMoneyNumber(ticket.savedAmountPaid);
     let amountPaid = toMoneyNumber(ticket.amountPaid);
     const newPaymentAmount = toMoneyNumber(ticket.newPaymentAmount);
@@ -195,7 +196,59 @@
     return {amountPaid, refundType, refundAmount, netPaid, balanceDue};
   }
 
+  function ticketItems(ticket){
+    return Array.isArray(ticket && ticket.extraItems) ? ticket.extraItems : [];
+  }
+
+  function ticketItemsTotal(items){
+    return (items || []).reduce((sum, item) => sum + (Math.max(1, Number(item.quantity || 1)) * toMoneyNumber(item.unitPrice)), 0);
+  }
+
+  function ticketTotalAmount(ticket){
+    const storedTotal = toMoneyNumber(ticket && ticket.totalPrice);
+    if(storedTotal) return storedTotal;
+    const finalPrice = toMoneyNumber(ticket && ticket.finalPrice);
+    return finalPrice + ticketItemsTotal(ticketItems(ticket));
+  }
+
+  function syncTicketFinalTotal(form){
+    const finalField = form ? form.elements.finalPrice : null;
+    const totalBox = $('#ticket-extra-items-total');
+    const base = toMoneyNumber(finalField ? finalField.value : 0);
+    const itemsTotal = ticketItemsTotal(draftTicketItems);
+    if(totalBox){
+      totalBox.textContent = `Extra items total: $${itemsTotal.toFixed(2)}. Ticket total used for payment/refund: $${(base + itemsTotal).toFixed(2)}.`;
+    }
+    return base + itemsTotal;
+  }
+
+  function renderTicketExtraItems(){
+    const table = $('#ticket-extra-items-table');
+    if(!table) return;
+    table.innerHTML = draftTicketItems.length ? draftTicketItems.map(item => {
+      const qty = Math.max(1, Number(item.quantity || 1));
+      const unit = toMoneyNumber(item.unitPrice);
+      return `<tr>
+        <td>${escapeHtml(item.name)}</td>
+        <td>${qty}</td>
+        <td>$${money(unit)}</td>
+        <td>$${money(qty * unit)}</td>
+        <td>${escapeHtml(item.paymentType || 'Included in ticket')}</td>
+        <td>${escapeHtml(item.refundType || 'None')}</td>
+        <td><button class="fc-btn danger" type="button" data-remove-ticket-item="${item.id}">Remove</button></td>
+      </tr>`;
+    }).join('') : '<tr><td colspan="7">No extra items added yet.</td></tr>';
+    syncTicketFinalTotal($('#ticket-form'));
+  }
+
   function prepareTicketPaymentSave(values, existingTicket){
+    if((values.paymentType || '') === 'No payment collected'){
+      values.paymentMethod = '';
+      values.newPaymentAmount = '';
+      if(!toMoneyNumber(values.savedAmountPaid || (existingTicket ? existingTicket.amountPaid : 0))){
+        values.amountPaid = '';
+      }
+    }
     const savedAmountPaid = toMoneyNumber(values.savedAmountPaid || (existingTicket ? existingTicket.amountPaid : 0));
     let newPaymentAmount = toMoneyNumber(values.newPaymentAmount);
     if((values.paymentType || '') === 'Balance payment' && savedAmountPaid > 0 && !newPaymentAmount){
@@ -233,6 +286,7 @@
 
   function applyTicketPayments(ticket){
     const calculated = calculateTicketPayments(ticket);
+    ticket.totalPrice = ticketTotalAmount(ticket).toFixed(2);
     ticket.refundType = calculated.refundType;
     ticket.amountPaid = calculated.amountPaid.toFixed(2);
     ticket.refundAmount = calculated.refundAmount.toFixed(2);
@@ -1006,6 +1060,7 @@
       renderCampaigns();
       renderSearch();
       renderPaymentHistory();
+      renderTicketExtraItems();
       populateAllSelects();
       updateTicketPaymentFields();
       updateTicketStockPreview();
@@ -1226,11 +1281,11 @@
           <td><strong>${escapeHtml(ticket.ticketNumber)}</strong></td>
           <td>${escapeHtml(fullName(customer))}<br><span class="fc-muted">${escapeHtml(customer ? customer.phone : '')}</span></td>
           <td>${escapeHtml(deviceLabel(data, ticket.brandId, ticket.deviceModelId) || `${ticket.deviceBrand || ''} ${ticket.deviceModel || ''}`.trim())}<br><span class="fc-muted">${escapeHtml(ticket.serial)}</span></td>
-          <td>${escapeHtml(ticket.problem)}</td>
+          <td>${escapeHtml(ticket.problem)}${ticketItems(ticket).length ? `<br><span class="fc-muted">Items: ${escapeHtml(ticketItems(ticket).map(item => `${item.name} x${item.quantity || 1}`).join(', '))}</span>` : ''}</td>
           <td>${statusPill(ticket.status)}</td>
           <td>${escapeHtml(ticket.estimatedCompletion)}</td>
           <td>$${money(ticket.estimatedPrice)}</td>
-          <td>$${money(ticket.finalPrice)}</td>
+          <td>$${money(ticketTotalAmount(ticket))}</td>
           <td>${escapeHtml(ticket.paymentType || 'No payment collected')}<br>$${money(payment.amountPaid)}${ticket.paymentMethod ? `<br><span class="fc-muted">${escapeHtml(ticket.paymentMethod)}</span>` : ''}<br><span class="${payment.balanceDue > 0 ? 'fc-balance-due' : 'fc-balance-paid'}">Balance: $${money(payment.balanceDue)}</span></td>
           <td>${escapeHtml(payment.refundType)}<br>$${money(payment.refundAmount)}</td>
           <td>$${money(payment.netPaid)}</td>
@@ -1294,7 +1349,8 @@
       const query = $('#ticket-search').value.toLowerCase();
       const tickets = data.tickets.filter(ticket => {
         const customer = customerById(data, ticket.customerId);
-        return [ticket.ticketNumber, modelName(data, ticket.deviceModelId), brandName(data, ticket.brandId), ticket.deviceModel, ticket.deviceBrand, customer && customer.fullName, customer && customer.phone].join(' ').toLowerCase().includes(query);
+        const itemText = ticketItems(ticket).map(item => item.name).join(' ');
+        return [ticket.ticketNumber, modelName(data, ticket.deviceModelId), brandName(data, ticket.brandId), ticket.deviceModel, ticket.deviceBrand, itemText, customer && customer.fullName, customer && customer.phone].join(' ').toLowerCase().includes(query);
       });
       $('#tickets-table').innerHTML = ticketRows(tickets);
     }
@@ -1367,10 +1423,34 @@
       const form = $('#ticket-form');
       if(!form) return;
       const values = formToObject(form);
+      values.extraItems = draftTicketItems.slice();
+      values.totalPrice = syncTicketFinalTotal(form).toFixed(2);
+      const paymentType = values.paymentType || 'No payment collected';
+      const methodField = $('#ticket-payment-method');
+      const newPaymentField = $('#ticket-new-payment-amount');
+      if(methodField){
+        if(paymentType === 'No payment collected'){
+          methodField.value = '';
+          methodField.disabled = true;
+        }else{
+          methodField.disabled = false;
+        }
+      }
+      if(newPaymentField && paymentType === 'No payment collected'){
+        newPaymentField.value = '';
+      }
       const refundType = values.refundType || 'None';
       const refundInput = $('#ticket-refund-amount');
+      const refundAmountRow = $('#ticket-refund-amount-row');
+      const netPaidRow = $('#ticket-net-paid-row');
       const message = $('#ticket-payment-message');
-      if(refundInput) refundInput.readOnly = !['Partial refund','Deposit refund'].includes(refundType);
+      const refundActive = refundType !== 'None';
+      if(refundAmountRow) refundAmountRow.hidden = !refundActive;
+      if(netPaidRow) netPaidRow.hidden = !refundActive;
+      if(refundInput){
+        refundInput.readOnly = !['Partial refund','Deposit refund'].includes(refundType);
+        if(!refundActive) refundInput.value = '0.00';
+      }
       const calculated = calculateTicketPayments(values);
       if(refundInput) refundInput.value = calculated.refundAmount.toFixed(2);
       if($('#ticket-net-paid')) $('#ticket-net-paid').value = calculated.netPaid.toFixed(2);
@@ -1379,10 +1459,10 @@
         const completedStatus = ['Repair Completed','Delivered','Refunded'].includes(normalizeTicketStatus(values.status));
         if(refundType === 'None'){
           message.className = 'wide fc-alert good';
-          message.textContent = `No refund selected. Paid after refunds is the actual money kept so far: $${calculated.netPaid.toFixed(2)}.`;
+          message.textContent = 'No refund selected. Refund amount and net refund calculation are hidden until you choose a refund type.';
         }else{
           message.className = 'wide fc-alert';
-          message.textContent = `${refundType} selected. Paid after refunds is amount paid minus refund amount.`;
+          message.textContent = `${refundType} selected. Net after refund is amount paid minus refund amount.`;
         }
         if(completedStatus && calculated.balanceDue > 0){
           message.className = 'wide fc-alert bad';
@@ -1525,6 +1605,46 @@
     });
     if($('#ticket-status')) $('#ticket-status').addEventListener('change', guidePaymentForCompletedTicket);
     if($('#ticket-payment-type')) $('#ticket-payment-type').addEventListener('change', guideBalancePaymentEntry);
+    if($('#ticket-extra-item-preset')) $('#ticket-extra-item-preset').addEventListener('change', event => {
+      const customField = $('#ticket-extra-item-name');
+      if(customField){
+        customField.hidden = event.target.value !== 'custom';
+        if(event.target.value !== 'custom') customField.value = '';
+        if(event.target.value === 'custom') customField.focus();
+      }
+    });
+    if($('#ticket-add-extra-item')) $('#ticket-add-extra-item').addEventListener('click', () => {
+      const presetField = $('#ticket-extra-item-preset');
+      const nameField = $('#ticket-extra-item-name');
+      const qtyField = $('#ticket-extra-item-qty');
+      const priceField = $('#ticket-extra-item-price');
+      const typeField = $('#ticket-extra-item-payment-type');
+      const refundTypeField = $('#ticket-extra-item-refund-type');
+      const preset = presetField ? presetField.value : '';
+      const name = preset === 'custom' ? String(nameField ? nameField.value : '').trim() : String(preset || '').trim();
+      const quantity = Math.max(1, Number(qtyField ? qtyField.value || 1 : 1));
+      const unitPrice = toMoneyNumber(priceField ? priceField.value : 0);
+      if(!name || unitPrice <= 0){
+        alert('Choose an item or enter a custom item name, then enter price.');
+        return;
+      }
+      draftTicketItems.push({
+        id:uid(),
+        name,
+        quantity,
+        unitPrice:unitPrice.toFixed(2),
+        paymentType:typeField ? typeField.value : 'Included in ticket',
+        refundType:refundTypeField ? refundTypeField.value : 'None',
+        createdAt:new Date().toISOString()
+      });
+      if(presetField) presetField.value = '';
+      if(nameField) nameField.value = '';
+      if(nameField) nameField.hidden = true;
+      if(qtyField) qtyField.value = '1';
+      if(priceField) priceField.value = '';
+      renderTicketExtraItems();
+      updateTicketPaymentFields();
+    });
 
     $('#ticket-form').addEventListener('submit', event => {
       event.preventDefault();
@@ -1546,6 +1666,8 @@
       if(selectedRepairCategory && !String(values.problem || '').toLowerCase().includes(selectedRepairCategory.toLowerCase())){
         values.problem = `${selectedRepairCategory}${values.problem ? ` - ${values.problem}` : ''}`;
       }
+      values.extraItems = draftTicketItems.map(item => Object.assign({}, item));
+      values.totalPrice = (toMoneyNumber(values.finalPrice) + ticketItemsTotal(values.extraItems)).toFixed(2);
       prepareTicketPaymentSave(values, existingTicket);
       applyTicketPayments(values);
       values.status = normalizeTicketStatus(values.status);
@@ -1573,23 +1695,27 @@
       }
       saveData(data);
       editing.ticket = null;
+      draftTicketItems = [];
       $('#ticket-submit').textContent = 'Create Ticket';
       event.currentTarget.reset();
       $('#ticket-status').value = 'Booked';
       if($('#ticket-new-payment-amount')) $('#ticket-new-payment-amount').value = '';
       if($('#ticket-saved-amount-paid')) $('#ticket-saved-amount-paid').value = '';
       updateTicketPaymentFields();
+      renderTicketExtraItems();
       render();
     });
 
     $('#ticket-reset').addEventListener('click', () => {
       editing.ticket = null;
+      draftTicketItems = [];
       $('#ticket-submit').textContent = 'Create Ticket';
       $('#ticket-form').reset();
       $('#ticket-status').value = 'Booked';
       if($('#ticket-new-payment-amount')) $('#ticket-new-payment-amount').value = '';
       if($('#ticket-saved-amount-paid')) $('#ticket-saved-amount-paid').value = '';
       updateTicketPaymentFields();
+      renderTicketExtraItems();
     });
 
     $('#ticket-search').addEventListener('input', renderTickets);
@@ -2452,6 +2578,11 @@
       const inventoryId = target.dataset.editInventory || target.dataset.deleteInventory;
       const campaignId = target.dataset.viewCampaign || target.dataset.editCampaign || target.dataset.cancelCampaign || target.dataset.deleteCampaign;
       const chatId = target.dataset.openChat || target.dataset.takeoverChat || target.dataset.returnAiChat || target.dataset.closeChat;
+      if(target.dataset.removeTicketItem){
+        draftTicketItems = draftTicketItems.filter(item => item.id !== target.dataset.removeTicketItem);
+        renderTicketExtraItems();
+        updateTicketPaymentFields();
+      }
       if(target.dataset.editCustomer || target.dataset.useCustomer){
         current = 'customers';
         render();
@@ -2470,11 +2601,13 @@
         editing.ticket = ticketId;
         render();
         data = loadData();
+        draftTicketItems = ticketItems(ticketById(data, ticketId)).map(item => Object.assign({}, item));
         fillForm($('#ticket-form'), ticketById(data, ticketId));
         populateAllSelects();
         fillForm($('#ticket-form'), ticketById(data, ticketId));
         if($('#ticket-new-payment-amount')) $('#ticket-new-payment-amount').value = '';
         if($('#ticket-saved-amount-paid')) $('#ticket-saved-amount-paid').value = toMoneyNumber((ticketById(data, ticketId) || {}).amountPaid).toFixed(2);
+        renderTicketExtraItems();
         updateTicketPaymentFields();
         updateTicketStockPreview();
         $('#ticket-submit').textContent = 'Update Ticket';
