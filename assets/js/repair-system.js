@@ -171,7 +171,14 @@
 
   function calculateTicketPayments(ticket){
     const finalPrice = toMoneyNumber(ticket.finalPrice);
-    const amountPaid = toMoneyNumber(ticket.amountPaid) + toMoneyNumber(ticket.newPaymentAmount);
+    const savedAmountPaid = toMoneyNumber(ticket.savedAmountPaid);
+    let amountPaid = toMoneyNumber(ticket.amountPaid);
+    const newPaymentAmount = toMoneyNumber(ticket.newPaymentAmount);
+    if((ticket.paymentType || '') === 'Balance payment' && savedAmountPaid > 0 && !newPaymentAmount && amountPaid !== savedAmountPaid){
+      amountPaid = savedAmountPaid + amountPaid;
+    }else{
+      amountPaid += newPaymentAmount;
+    }
     const refundType = ticket.refundType || 'None';
     let refundAmount = toMoneyNumber(ticket.refundAmount);
     if(refundType === 'None') refundAmount = 0;
@@ -185,11 +192,16 @@
   }
 
   function prepareTicketPaymentSave(values, existingTicket){
-    const newPaymentAmount = toMoneyNumber(values.newPaymentAmount);
+    const savedAmountPaid = toMoneyNumber(values.savedAmountPaid || (existingTicket ? existingTicket.amountPaid : 0));
+    let newPaymentAmount = toMoneyNumber(values.newPaymentAmount);
+    if((values.paymentType || '') === 'Balance payment' && savedAmountPaid > 0 && !newPaymentAmount){
+      const typedAmount = toMoneyNumber(values.amountPaid);
+      if(typedAmount && typedAmount !== savedAmountPaid) newPaymentAmount = typedAmount;
+    }
     const paymentMethod = values.paymentMethod || (existingTicket ? existingTicket.paymentMethod : '') || '';
     values.paymentHistory = existingTicket && Array.isArray(existingTicket.paymentHistory) ? existingTicket.paymentHistory.slice() : [];
     if(newPaymentAmount > 0){
-      values.amountPaid = (toMoneyNumber(values.amountPaid) + newPaymentAmount).toFixed(2);
+      values.amountPaid = (savedAmountPaid ? savedAmountPaid + newPaymentAmount : toMoneyNumber(values.amountPaid) + newPaymentAmount).toFixed(2);
       values.paymentMethod = paymentMethod;
       values.paymentHistory.push({
         id:uid(),
@@ -201,6 +213,7 @@
       });
     }
     values.newPaymentAmount = '';
+    values.savedAmountPaid = '';
     return values;
   }
 
@@ -1201,7 +1214,7 @@
         }
         if(completedStatus && calculated.balanceDue > 0){
           message.className = 'wide fc-alert bad';
-          message.textContent = `This ticket is completed but still has $${calculated.balanceDue.toFixed(2)} balance due. Choose payment method, enter that amount in Add balance payment, then update the ticket.`;
+          message.textContent = `This ticket is completed but still has $${calculated.balanceDue.toFixed(2)} balance due. Choose payment method, enter that amount in Collect balance now, then update the ticket.`;
         }else if(completedStatus && calculated.balanceDue === 0){
           message.className = 'wide fc-alert good';
           message.textContent = 'This ticket is completed and the balance due is $0.00.';
@@ -1229,6 +1242,21 @@
         if(methodField && !methodField.value) methodField.focus();
         updateTicketPaymentFields();
       }
+    }
+
+    function guideBalancePaymentEntry(){
+      const form = $('#ticket-form');
+      if(!form) return;
+      const values = formToObject(form);
+      if(values.paymentType !== 'Balance payment') return;
+      const amountField = form.elements.amountPaid;
+      const newPaymentField = $('#ticket-new-payment-amount');
+      const savedField = $('#ticket-saved-amount-paid');
+      if(amountField && savedField && savedField.value) amountField.value = Number(savedField.value || 0).toFixed(2);
+      const calculated = calculateTicketPayments(formToObject(form));
+      if(newPaymentField && !newPaymentField.value) newPaymentField.value = calculated.balanceDue.toFixed(2);
+      if(newPaymentField) newPaymentField.focus();
+      updateTicketPaymentFields();
     }
 
     function updateTicketStockPreview(){
@@ -1324,6 +1352,7 @@
       if(field) field.addEventListener('change', updateTicketPaymentFields);
     });
     if($('#ticket-status')) $('#ticket-status').addEventListener('change', guidePaymentForCompletedTicket);
+    if($('#ticket-payment-type')) $('#ticket-payment-type').addEventListener('change', guideBalancePaymentEntry);
 
     $('#ticket-form').addEventListener('submit', event => {
       event.preventDefault();
@@ -1376,6 +1405,7 @@
       event.currentTarget.reset();
       $('#ticket-status').value = 'Booked';
       if($('#ticket-new-payment-amount')) $('#ticket-new-payment-amount').value = '';
+      if($('#ticket-saved-amount-paid')) $('#ticket-saved-amount-paid').value = '';
       updateTicketPaymentFields();
       render();
     });
@@ -1386,6 +1416,7 @@
       $('#ticket-form').reset();
       $('#ticket-status').value = 'Booked';
       if($('#ticket-new-payment-amount')) $('#ticket-new-payment-amount').value = '';
+      if($('#ticket-saved-amount-paid')) $('#ticket-saved-amount-paid').value = '';
       updateTicketPaymentFields();
     });
 
@@ -2271,6 +2302,7 @@
         populateAllSelects();
         fillForm($('#ticket-form'), ticketById(data, ticketId));
         if($('#ticket-new-payment-amount')) $('#ticket-new-payment-amount').value = '';
+        if($('#ticket-saved-amount-paid')) $('#ticket-saved-amount-paid').value = toMoneyNumber((ticketById(data, ticketId) || {}).amountPaid).toFixed(2);
         updateTicketPaymentFields();
         updateTicketStockPreview();
         $('#ticket-submit').textContent = 'Update Ticket';
