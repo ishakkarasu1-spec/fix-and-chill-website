@@ -113,7 +113,7 @@
           <label>IMEI or serial number <input name="serial"></label>
           <label>Estimated price <input name="estimatedPrice" type="number" step="0.01" min="0"></label>
           <label>Final price <input name="finalPrice" type="number" step="0.01" min="0"></label>
-          <div id="ticket-add-item-box" class="wide fc-payment-box">
+          <div id="ticket-add-item-box" class="wide fc-payment-box" hidden>
             <h3>Add Item</h3>
             <p class="fc-muted">Add accessories or extra sale items to this ticket, such as screen protector, case, or charging cable. These items are included in final price, payment, balance, and refund calculations.</p>
             <div class="fc-inline-add">
@@ -145,7 +145,7 @@
             <div class="fc-table-wrap" style="margin-top:12px"><table class="fc-table"><thead><tr><th>Item</th><th>Qty</th><th>Unit</th><th>Total</th><th>Payment</th><th>Refund</th><th>Actions</th></tr></thead><tbody id="ticket-extra-items-table"></tbody></table></div>
             <div id="ticket-extra-items-total" class="fc-muted"></div>
           </div>
-          <div id="ticket-payment-box" class="wide fc-payment-box">
+          <div id="ticket-payment-box" class="wide fc-payment-box" hidden>
             <h3>Payment</h3>
             <label>Payment type <select id="ticket-payment-type" name="paymentType"><option value="No payment collected">No payment collected</option><option value="Deposit">Deposit</option><option value="Partial payment">Partial payment</option><option value="Balance payment">Balance payment</option><option value="Full payment">Full payment</option></select></label>
             <input id="ticket-saved-amount-paid" name="savedAmountPaid" type="hidden">
@@ -154,7 +154,7 @@
             <label>Collect balance now <input id="ticket-new-payment-amount" name="newPaymentAmount" type="number" step="0.01" min="0" placeholder="New money collected now"></label>
             <label>Balance due <input id="ticket-balance-due" name="balanceDue" type="number" step="0.01" readonly></label>
           </div>
-          <div id="ticket-refund-box" class="wide fc-payment-box fc-refund-box">
+          <div id="ticket-refund-box" class="wide fc-payment-box fc-refund-box" hidden>
             <h3>Refund</h3>
             <label>Refund type <select id="ticket-refund-type" name="refundType"><option value="None">None</option><option value="Partial refund">Partial refund</option><option value="Deposit refund">Deposit refund</option><option value="Full refund">Full refund</option></select></label>
             <label id="ticket-refund-amount-row">Refund amount <input id="ticket-refund-amount" name="refundAmount" type="number" step="0.01" min="0" value="0"></label>
@@ -177,6 +177,41 @@
           <input id="ticket-search" class="fc-search" type="search" placeholder="Search by customer, phone, ticket number, or device model">
           <div class="fc-table-wrap" style="margin-top:12px"><table class="fc-table"><thead><tr><th>Ticket</th><th>Customer</th><th>Device</th><th>Problem</th><th>Status</th><th>ETA</th><th>Estimate</th><th>Final</th><th>Payment</th><th>Refund</th><th>Net</th><th>Created</th><th>Actions</th></tr></thead><tbody id="tickets-table"></tbody></table></div>
         </div>
+        <form id="payment-manager-form" class="fc-card fc-form three">
+          <h2 class="wide">Payment / Refund / Add Item</h2>
+          <p class="wide fc-muted">Select a customer and ticket, add manual items if needed, then collect payment or process refund. This updates the same repair ticket.</p>
+          <label>Customer <select id="pay-customer"></select></label>
+          <label>Repair ticket <select id="pay-ticket" name="ticketId" required></select></label>
+          <label>Current ticket total <input id="pay-ticket-total" type="number" step="0.01" readonly></label>
+          <div class="wide fc-simple-item-box">
+            <h3>Add Item</h3>
+            <label>Item name <input id="pay-item-name" type="text" placeholder="Screen Protector, Case, Charging Cable, Other"></label>
+            <label>Qty <input id="pay-item-qty" type="number" min="1" value="1"></label>
+            <label>Price <input id="pay-item-price" type="number" step="0.01" min="0" placeholder="Item price"></label>
+            <button id="pay-add-item" class="fc-btn secondary" type="button">Add Item to Ticket</button>
+            <div class="fc-table-wrap"><table class="fc-table compact"><thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th><th>Action</th></tr></thead><tbody id="pay-items-table"></tbody></table></div>
+          </div>
+          <div class="wide fc-payment-box">
+            <h3>Payment</h3>
+            <label>Payment type <select id="pay-payment-type" name="paymentType"><option value="No payment collected">No payment collected</option><option value="Deposit">Deposit</option><option value="Partial payment">Partial payment</option><option value="Balance payment">Balance payment</option><option value="Full payment">Full payment</option></select></label>
+            <label>Amount collected now <input id="pay-new-payment-amount" name="newPaymentAmount" type="number" step="0.01" min="0"></label>
+            <label>Payment method <select id="pay-payment-method" name="paymentMethod"><option value="">None</option><option value="Cash">Cash</option><option value="Credit/Debit Card">Credit/Debit Card</option><option value="Venmo">Venmo</option><option value="Zelle">Zelle</option><option value="Other">Other</option></select></label>
+            <label>Already paid <input id="pay-already-paid" type="number" step="0.01" readonly></label>
+            <label>Balance due <input id="pay-balance-due" type="number" step="0.01" readonly></label>
+          </div>
+          <div class="wide fc-payment-box fc-refund-box">
+            <h3>Refund</h3>
+            <label>Refund type <select id="pay-refund-type" name="refundType"><option value="None">None</option><option value="Deposit refund">Deposit refund</option><option value="Partial refund">Partial refund</option><option value="Full refund">Full refund</option></select></label>
+            <label>Refund amount <input id="pay-refund-amount" name="refundAmount" type="number" step="0.01" min="0" value="0"></label>
+            <label>Net after refund <input id="pay-net-paid" type="number" step="0.01" readonly></label>
+            <label class="wide">Payment / refund notes <textarea id="pay-notes" name="refundNotes" placeholder="Payment details, refund reason, approval notes"></textarea></label>
+            <div id="pay-message" class="wide fc-alert" hidden></div>
+          </div>
+          <div class="wide fc-actions">
+            <button class="fc-btn" type="submit">Update Payment / Refund</button>
+            <button id="pay-clear" class="fc-btn secondary" type="button">Clear</button>
+          </div>
+        </form>
         <div class="fc-card">
           <h2>Payment History</h2>
           <p class="fc-muted">Shows payments collected for repair tickets, including amount, payment type, method, and date.</p>

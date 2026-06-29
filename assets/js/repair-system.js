@@ -59,6 +59,7 @@
   const money = value => value === '' || value == null ? '' : Number(value).toFixed(2);
   const toMoneyNumber = value => Math.max(0, Number(value || 0) || 0);
   let draftTicketItems = [];
+  let draftPaymentItems = [];
   const slug = value => String(value || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || uid();
   const normalizePhone = value => String(value || '').replace(/\D/g, '');
   const normalizeEmail = value => String(value || '').trim().toLowerCase();
@@ -239,6 +240,69 @@
       </tr>`;
     }).join('') : '<tr><td colspan="7">No extra items added yet.</td></tr>';
     syncTicketFinalTotal($('#ticket-form'));
+  }
+
+  function selectedPaymentTicket(){
+    return ticketById(data, $('#pay-ticket') ? $('#pay-ticket').value : '');
+  }
+
+  function renderPaymentItems(){
+    const table = $('#pay-items-table');
+    if(!table) return;
+    table.innerHTML = draftPaymentItems.length ? draftPaymentItems.map(item => {
+      const qty = Math.max(1, Number(item.quantity || 1));
+      const price = toMoneyNumber(item.unitPrice);
+      return `<tr>
+        <td>${escapeHtml(item.name)}</td>
+        <td>${qty}</td>
+        <td>$${money(price)}</td>
+        <td>$${money(qty * price)}</td>
+        <td><button class="fc-btn danger" type="button" data-remove-pay-item="${item.id}">Remove</button></td>
+      </tr>`;
+    }).join('') : '<tr><td colspan="5">No extra items added.</td></tr>';
+  }
+
+  function updatePaymentManagerFields(){
+    const ticket = selectedPaymentTicket();
+    const totalField = $('#pay-ticket-total');
+    const alreadyPaidField = $('#pay-already-paid');
+    const balanceField = $('#pay-balance-due');
+    const netField = $('#pay-net-paid');
+    const refundTypeField = $('#pay-refund-type');
+    const refundAmountField = $('#pay-refund-amount');
+    const paymentTypeField = $('#pay-payment-type');
+    const methodField = $('#pay-payment-method');
+    const newPaymentField = $('#pay-new-payment-amount');
+    const message = $('#pay-message');
+    if(!ticket){
+      [totalField, alreadyPaidField, balanceField, netField].forEach(field => { if(field) field.value = ''; });
+      renderPaymentItems();
+      return;
+    }
+    const preview = Object.assign({}, ticket, {
+      extraItems: ticketItems(ticket).concat(draftPaymentItems),
+      totalPrice: ''
+    });
+    preview.totalPrice = ticketTotalAmount(preview).toFixed(2);
+    if(newPaymentField) preview.newPaymentAmount = newPaymentField.value;
+    if(refundTypeField) preview.refundType = refundTypeField.value || 'None';
+    if(refundAmountField) preview.refundAmount = refundAmountField.value || '0';
+    const calculated = calculateTicketPayments(preview);
+    if(totalField) totalField.value = preview.totalPrice;
+    if(alreadyPaidField) alreadyPaidField.value = toMoneyNumber(ticket.amountPaid).toFixed(2);
+    if(balanceField) balanceField.value = calculated.balanceDue.toFixed(2);
+    if(netField) netField.value = calculated.netPaid.toFixed(2);
+    if(methodField){
+      const noPayment = !paymentTypeField || paymentTypeField.value === 'No payment collected';
+      methodField.disabled = noPayment;
+      if(noPayment) methodField.value = '';
+    }
+    if(message){
+      message.className = calculated.balanceDue > 0 ? 'wide fc-alert' : 'wide fc-alert good';
+      message.textContent = `Ticket total: $${preview.totalPrice}. Paid: $${calculated.amountPaid.toFixed(2)}. Balance due: $${calculated.balanceDue.toFixed(2)}.`;
+      message.hidden = false;
+    }
+    renderPaymentItems();
   }
 
   function prepareTicketPaymentSave(values, existingTicket){
@@ -1064,6 +1128,7 @@
       populateAllSelects();
       updateTicketPaymentFields();
       updateTicketStockPreview();
+      updatePaymentManagerFields();
     }
 
     function populateAllSelects(){
@@ -1099,6 +1164,10 @@
       populatePlainSelect($('#ticket-payment-method'), paymentMethods, $('#ticket-payment-method') ? $('#ticket-payment-method').value : '');
       populateSelect($('#ticket-repair-category'), data.partCategories, category => category.id, category => category.categoryName, $('#ticket-repair-category') ? $('#ticket-repair-category').value : '');
       populateSelect($('#ticket-inventory-part'), compatibleInventoryParts(data, $('#ticket-model') ? $('#ticket-model').value : '', $('#ticket-repair-category') ? $('#ticket-repair-category').value : '', true), item => item.id, item => inventoryPartLabel(data, item), $('#ticket-inventory-part') ? $('#ticket-inventory-part').value : '');
+      populateSelect($('#pay-customer'), data.customers, customer => customer.id, customerLabel, $('#pay-customer') ? $('#pay-customer').value : '');
+      const payCustomerId = $('#pay-customer') ? $('#pay-customer').value : '';
+      const payTickets = payCustomerId ? data.tickets.filter(ticket => ticket.customerId === payCustomerId) : data.tickets.slice();
+      populateSelect($('#pay-ticket'), payTickets, ticket => ticket.id, ticketLabel, $('#pay-ticket') ? $('#pay-ticket').value : '');
       populateSelect($('#order-ticket'), data.tickets, ticket => ticket.id, ticketLabel, $('#order-ticket').value);
       populateSelect($('#order-brand'), data.brands, brand => brand.id, brand => brand.brandName, $('#order-brand').value);
       populateModelsForBrand($('#order-device-model'), data, $('#order-brand').value, $('#order-device-model').value);
@@ -1644,6 +1713,84 @@
     });
     if($('#ticket-status')) $('#ticket-status').addEventListener('change', guidePaymentForCompletedTicket);
     if($('#ticket-payment-type')) $('#ticket-payment-type').addEventListener('change', guideBalancePaymentEntry);
+    if($('#pay-customer')) $('#pay-customer').addEventListener('change', () => {
+      draftPaymentItems = [];
+      populateAllSelects();
+      updatePaymentManagerFields();
+    });
+    if($('#pay-ticket')) $('#pay-ticket').addEventListener('change', () => {
+      draftPaymentItems = [];
+      updatePaymentManagerFields();
+    });
+    ['pay-payment-type','pay-new-payment-amount','pay-payment-method','pay-refund-type','pay-refund-amount'].forEach(id => {
+      const field = $(`#${id}`);
+      if(field){
+        field.addEventListener('input', updatePaymentManagerFields);
+        field.addEventListener('change', updatePaymentManagerFields);
+      }
+    });
+    if($('#pay-add-item')) $('#pay-add-item').addEventListener('click', () => {
+      const name = String($('#pay-item-name') ? $('#pay-item-name').value : '').trim();
+      const quantity = Math.max(1, Number($('#pay-item-qty') ? $('#pay-item-qty').value || 1 : 1));
+      const unitPrice = toMoneyNumber($('#pay-item-price') ? $('#pay-item-price').value : 0);
+      if(!selectedPaymentTicket()){
+        alert('Select a repair ticket first.');
+        return;
+      }
+      if(!name || unitPrice <= 0){
+        alert('Enter item name and price first.');
+        return;
+      }
+      draftPaymentItems.push({id:uid(), name, quantity, unitPrice:unitPrice.toFixed(2), paymentType:'Included in ticket', refundType:'None', createdAt:new Date().toISOString()});
+      if($('#pay-item-name')) $('#pay-item-name').value = '';
+      if($('#pay-item-qty')) $('#pay-item-qty').value = '1';
+      if($('#pay-item-price')) $('#pay-item-price').value = '';
+      updatePaymentManagerFields();
+    });
+    if($('#payment-manager-form')) $('#payment-manager-form').addEventListener('submit', event => {
+      event.preventDefault();
+      data = loadData();
+      const ticket = ticketById(data, $('#pay-ticket') ? $('#pay-ticket').value : '');
+      const message = $('#pay-message');
+      if(!ticket){
+        if(message){
+          message.className = 'wide fc-alert bad';
+          message.textContent = 'Select a repair ticket first.';
+          message.hidden = false;
+        }
+        return;
+      }
+      ticket.extraItems = ticketItems(ticket).concat(draftPaymentItems.map(item => Object.assign({}, item)));
+      ticket.totalPrice = ticketTotalAmount(Object.assign({}, ticket, {totalPrice:''})).toFixed(2);
+      const values = {
+        paymentType: $('#pay-payment-type') ? $('#pay-payment-type').value : 'No payment collected',
+        paymentMethod: $('#pay-payment-method') ? $('#pay-payment-method').value : '',
+        amountPaid: ticket.amountPaid || '',
+        savedAmountPaid: ticket.amountPaid || '',
+        newPaymentAmount: $('#pay-new-payment-amount') ? $('#pay-new-payment-amount').value : '',
+        refundType: $('#pay-refund-type') ? $('#pay-refund-type').value : 'None',
+        refundAmount: $('#pay-refund-amount') ? $('#pay-refund-amount').value : '0',
+        refundNotes: $('#pay-notes') ? $('#pay-notes').value : ''
+      };
+      Object.assign(ticket, values);
+      prepareTicketPaymentSave(ticket, ticket);
+      applyTicketPayments(ticket);
+      saveData(data);
+      draftPaymentItems = [];
+      if($('#pay-new-payment-amount')) $('#pay-new-payment-amount').value = '';
+      if($('#pay-refund-amount')) $('#pay-refund-amount').value = ticket.refundAmount || '0.00';
+      if(message){
+        message.className = 'wide fc-alert good';
+        message.textContent = 'Payment / refund updated on this repair ticket.';
+        message.hidden = false;
+      }
+      render();
+    });
+    if($('#pay-clear')) $('#pay-clear').addEventListener('click', () => {
+      draftPaymentItems = [];
+      if($('#payment-manager-form')) $('#payment-manager-form').reset();
+      updatePaymentManagerFields();
+    });
     if($('#ticket-extra-item-preset')) $('#ticket-extra-item-preset').addEventListener('change', event => {
       const customField = $('#ticket-extra-item-name');
       if(customField){
@@ -2621,6 +2768,10 @@
         draftTicketItems = draftTicketItems.filter(item => item.id !== target.dataset.removeTicketItem);
         renderTicketExtraItems();
         updateTicketPaymentFields();
+      }
+      if(target.dataset.removePayItem){
+        draftPaymentItems = draftPaymentItems.filter(item => item.id !== target.dataset.removePayItem);
+        updatePaymentManagerFields();
       }
       if(target.dataset.editCustomer || target.dataset.useCustomer){
         current = 'customers';
