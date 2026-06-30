@@ -14,7 +14,7 @@ body.fc-admin-body{margin:0;background:var(--fc-bg);color:var(--fc-ink);font:15p
 .fc-shell{min-height:100vh;display:grid;grid-template-columns:260px 1fr}
 .fc-sidebar{background:#123f43;color:#fff;padding:22px;position:sticky;top:0;height:100vh;overflow:auto}
 .fc-brand{display:flex;align-items:center;gap:12px;margin-bottom:22px}
-.fc-brand img{width:54px;height:54px;object-fit:contain;background:#fff;border-radius:10px}
+.fc-brand img{width:96px;height:54px;object-fit:contain;background:#050505;border-radius:8px}
 .fc-brand strong{display:block;font-size:19px;line-height:1.15}
 .fc-brand span{display:block;color:#d7eef0;font-size:13px}
 .fc-nav{display:grid;gap:7px}
@@ -86,14 +86,14 @@ body.fc-admin-body{margin:0;background:var(--fc-bg);color:var(--fc-ink);font:15p
 .fc-alert.bad{background:#fff0f0;border-color:#f0aaaa;color:#7f1d1d}
 .fc-login{min-height:100vh;display:grid;place-items:center;padding:24px;background:#123f43}
 .fc-login .fc-card{width:min(440px,100%)}
-.fc-login img{width:130px;margin:0 auto 16px}
+.fc-login img{width:220px;max-width:82%;margin:0 auto 16px}
 .fc-login h1{margin:0 0 6px;text-align:center}
 .fc-login p{text-align:center;color:var(--fc-muted);margin:0 0 18px}
 .fc-login .fc-remember-row{display:flex;align-items:center;justify-content:flex-start;gap:8px;margin:2px 0 4px}
 .fc-login .fc-remember-row input{width:auto}
 .fc-public{max-width:920px;margin:0 auto;padding:26px}
 .fc-public-header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px}
-.fc-public-header img{width:150px}
+.fc-public-header img{width:220px;max-width:70vw}
 .fc-result{margin-top:18px}
 .fc-track-option{display:grid;gap:3px;padding:10px 12px;border:1px solid var(--fc-border);border-radius:8px;background:#f8fafc}
 .fc-track-option strong{font-size:13px;text-transform:uppercase;color:#123f43}
@@ -151,7 +151,7 @@ body.fc-admin-body{margin:0;background:var(--fc-bg);color:var(--fc-ink);font:15p
   .fc-public .fc-card{padding:14px}
   .fc-public h1{font-size:30px;line-height:1.1}
   .fc-public-header{align-items:flex-start;gap:10px}
-  .fc-public-header img{width:118px}
+  .fc-public-header img{width:170px}
   .fc-public .fc-btn{width:100%;justify-content:center}
   .fc-track-or{padding:0;justify-self:center}
   .fc-result-item strong{font-size:16px;overflow-wrap:anywhere}
