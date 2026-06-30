@@ -301,20 +301,20 @@ body.modal-open{overflow:hidden}
 @media(max-width:768px){
   body{font-size:15px}
   .container{padding-left:22px;padding-right:22px}
-  .nav{display:flex;align-items:center;justify-content:center;text-align:center;flex-wrap:wrap;gap:1px;min-height:auto;padding-top:3px;padding-bottom:1px}
+  .nav{display:flex;align-items:center;justify-content:center;text-align:center;flex-wrap:wrap;gap:0;min-height:auto;padding-top:0;padding-bottom:0}
   .nav nav{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:1px;width:100%;line-height:1}
   .nav a{margin-left:0}
   .nav nav a{font-size:11px;padding:1px 4px}
   .nav nav .btn{padding:4px 7px;border-radius:8px}
   .nav-contact{align-items:center;margin-left:0}
   .nav-social{display:none}
-  .logo.logo-wide{--logo-width:158px;margin-left:auto;margin-right:auto;order:1;flex:0 0 100%;justify-content:center;overflow:visible;max-height:none}
-  .logo.logo-wide img{width:100%!important;max-width:100%;max-height:none;transform:none}
+  .logo.logo-wide{--logo-width:158px;margin:-18px auto -18px;order:1;flex:0 0 100%;justify-content:center;overflow:visible;max-height:none}
+  .logo.logo-wide img{width:100%!important;max-width:100%;max-height:none;transform:translateY(-8px)}
   .logo-city-line{font-size:12px;max-width:320px}
   .logo-service-line{font-size:14px;max-width:none}
-  .nav-service-line{display:block;position:static;transform:translateY(-6px);order:2;flex:0 0 auto;margin:-2px auto -4px;width:auto;max-width:none;font-size:9.4px;line-height:1;padding:2px 7px;white-space:nowrap;border-radius:4px;text-align:center}
+  .nav-service-line{display:block;position:static;transform:translateY(-12px);order:2;flex:0 0 auto;margin:-8px auto -10px;width:auto;max-width:none;font-size:9.4px;line-height:1;padding:2px 7px;white-space:nowrap;border-radius:4px;text-align:center}
   .nav nav{order:3}
-  .topbar{position:static;flex-direction:column;align-items:center;gap:0;text-align:center;padding:5px 10px;line-height:1.15}
+  .topbar{position:static;flex-direction:column;align-items:center;gap:0;text-align:center;margin-top:-8px;padding:5px 10px;line-height:1.15}
   .topbar span{font-size:16px}
   .topbar a.topbar-call{font-size:18px}
   .hero-img img{height:420px}
@@ -466,10 +466,10 @@ body.modal-open{overflow:hidden}
   .book-page-section{margin-left:14px;margin-right:14px}
   .book-page-section h1{font-size:29px}
   .book-page .form input,.book-page .form select,.book-page .form textarea{padding:13px 12px;font-size:16px}
-  .logo.logo-wide{--logo-width:150px;max-height:none}
-  .logo.logo-wide img{width:100%!important;max-height:none;transform:none}
+  .logo.logo-wide{--logo-width:150px;max-height:none;margin-top:-16px;margin-bottom:-18px}
+  .logo.logo-wide img{width:100%!important;max-height:none;transform:translateY(-8px)}
   .logo-city-line,.logo-service-line{max-width:none}
-  .nav-service-line{max-width:none;font-size:9.4px;padding:2px 7px;white-space:nowrap}
+  .nav-service-line{max-width:none;font-size:9.4px;padding:2px 7px;white-space:nowrap;transform:translateY(-12px);margin:-8px auto -10px}
   .logo-service-line{font-size:9.4px}
   body.mobile-nav-scrolled .nav.sticky .logo.logo-wide{--logo-width:126px;width:126px;flex:0 0 126px}
   .hero-img img{height:390px}
