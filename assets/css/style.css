@@ -33,12 +33,12 @@ img{max-width:100%;height:auto;display:block}
 .btn-ghost{background:transparent;border:1px solid var(--primary);color:#fff}
 .hero{padding:64px 16px;text-align:center}
 .hero-cta{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:12px}
-.top-slideshow{position:relative;overflow:hidden;margin:-18px auto 8px;padding:0;border-radius:18px;height:210px;background:#d9e2e5;box-shadow:0 12px 26px rgba(15,23,42,.14)}
+.top-slideshow{position:relative;overflow:hidden;margin:18px auto 14px;padding:0;border-radius:18px;height:280px;background:#d9e2e5;box-shadow:0 12px 26px rgba(15,23,42,.14)}
 .slideshow-slide{position:absolute;inset:0;margin:0;opacity:0;visibility:hidden;transition:opacity .45s ease, visibility .45s ease}
 .slideshow-slide.is-active{opacity:1;visibility:visible}
-.slideshow-slide img,.slideshow-video{width:100%;height:100%;display:block;object-fit:cover;object-position:62% center}
-.slideshow-slide img[src*="mobile-service-customer"],.slideshow-video{object-position:62% 18%}
-.slideshow-slide img[src*="cracked-phone"]{object-position:62% 28%}
+.slideshow-slide img,.slideshow-video{width:100%;height:100%;display:block;object-fit:cover;object-position:center center}
+.slideshow-slide img[src*="mobile-service-customer"],.slideshow-video{object-position:center 24%}
+.slideshow-slide img[src*="cracked-phone"]{object-position:center 32%}
 .slideshow-video{background:#111}
 .slideshow-dots{position:absolute;left:0;right:0;bottom:10px;display:flex;justify-content:center;gap:6px;z-index:3}
 .slideshow-dot{width:7px;height:7px;border-radius:999px;background:rgba(255,255,255,.65);box-shadow:0 1px 4px rgba(0,0,0,.25)}
@@ -106,7 +106,7 @@ img{max-width:100%;height:auto;display:block}
 .nav-social .social-link.youtube span{font-size:12px}
 
 /* Topbar */
-.topbar{position:static;background:#081421;color:#fff;display:flex;justify-content:center;align-items:center;gap:16px;padding:5px 12px;text-align:center}
+.topbar{position:relative;z-index:4;background:#081421;color:#fff;display:flex;justify-content:center;align-items:center;gap:16px;min-height:46px;padding:10px 12px;text-align:center;line-height:1.2}
 .topbar span{display:inline-block;text-align:center}
 .topbar a.topbar-call{color:#F97316;text-decoration:none;font-weight:800}
 
