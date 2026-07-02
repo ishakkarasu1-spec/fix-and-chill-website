@@ -11,18 +11,20 @@ img{max-width:100%;height:auto;display:block}
 .nav{position:relative;display:grid;grid-template-columns:auto minmax(260px,1fr) auto;align-items:center;gap:28px;min-height:170px;padding-top:0;padding-bottom:0;background:var(--brand-navy)}
 .nav.container{padding-top:0;padding-bottom:0}
 .nav.container{max-width:1380px}
-.nav a{margin-left:16px;text-decoration:none;color:#fff}
+.nav a{margin-left:0;text-decoration:none;color:#fff}
 .nav a:hover{color:var(--accent)}
 .logo{display:flex;gap:10px;align-items:center;font-weight:700}
 .logo img{width:64px;height:64px;border-radius:12px;object-fit:contain}
-.logo.logo-wide{--logo-width:430px;align-items:center;flex-direction:column;gap:2px;margin-right:0;text-decoration:none;width:var(--logo-width);height:170px;max-width:100%;justify-content:center;overflow:visible}
+.logo.logo-wide{--logo-width:430px;align-items:center;flex-direction:column;gap:2px;margin-right:0;text-decoration:none;width:var(--logo-width);height:170px;max-width:100%;justify-content:center;overflow:visible;background:#081421}
 .logo.logo-wide img{width:100%!important;height:auto;max-height:none;border-radius:0}
 .logo-city-line{display:none!important}
 .logo-service-line{display:block;width:100%;color:#fff;font-size:15px;font-weight:900;line-height:1.1;background:#0B1220;border:1px solid #00AEEF;padding:4px 9px;border-radius:999px;letter-spacing:0;text-align:center}
 .logo-service-line .years-highlight{color:#F97316}
 .logo-service-line:before{content:"";color:#00AEEF}
-.nav-service-line{position:static;left:auto;top:auto;transform:none;width:auto;max-width:250px;margin:0;white-space:normal;z-index:1;justify-self:center;font-size:13px;padding:4px 8px}
-.nav nav{position:relative;z-index:2;display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;justify-self:end}
+.nav-service-line{position:static;left:auto;top:auto;transform:none;width:auto;max-width:320px;margin:0;white-space:normal;z-index:1;justify-self:center;align-self:center;font-size:16px;padding:6px 12px}
+.nav nav{position:relative;z-index:2;display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:8px;justify-self:end}
+.nav nav > a{display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:7px 12px;border:1px solid #00AEEF;border-radius:999px;background:#0B1220;color:#fff;font-weight:800;line-height:1;box-shadow:0 6px 14px rgba(0,174,239,.08)}
+.nav nav > a:hover{background:#00AEEF;color:#081421;border-color:#00AEEF}
 .old-location{display:inline-block;margin:0 0 6px;padding:4px 9px;border-radius:999px;background:#0B1220;color:#fff;border:1px solid #00AEEF;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0}
 .come-to-you-location{display:inline-block;margin:0 0 10px;padding:6px 12px;border-radius:999px;background:#D71920;color:#fff;font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:0;box-shadow:0 4px 12px rgba(217,25,32,.18)}
 .mobile-service-label{display:inline-block;margin:0 0 8px;padding:4px 10px;border-radius:999px;background:#D71920;color:#fff;font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:0}
