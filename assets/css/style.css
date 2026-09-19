@@ -34,6 +34,7 @@ img{max-width:100%;height:auto;display:block}
 .slideshow-slide img[src*="mobile-service-customer"],.slideshow-video{object-position:62% 18%}
 .slideshow-slide img[src*="cracked-phone"]{object-position:62% 28%}
 .slideshow-video{background:#111}
+.slideshow-slide img.slideshow-promotion{object-fit:contain;object-position:center;background:#000}
 .slideshow-dots{position:absolute;left:0;right:0;bottom:10px;display:flex;justify-content:center;gap:6px;z-index:3}
 .slideshow-dot{width:7px;height:7px;border-radius:999px;background:rgba(255,255,255,.65);box-shadow:0 1px 4px rgba(0,0,0,.25)}
 .slideshow-dot.is-active{background:#f2b137}
