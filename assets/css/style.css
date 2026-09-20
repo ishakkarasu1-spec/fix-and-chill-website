@@ -481,3 +481,7 @@ body.modal-open{overflow:hidden}
   .brand-grid{grid-template-columns:1fr}
   .form{max-width:100%}
 }
+
+.slideshow-town{background:#102b30}
+.slideshow-slide.slideshow-town img{object-fit:scale-down;object-position:center}
+.slideshow-town figcaption{position:absolute;left:16px;bottom:30px;max-width:calc(100% - 32px);padding:8px 14px;border-radius:8px;background:rgba(0,0,0,.78);color:#fff;font-size:clamp(12px,1.3vw,18px);line-height:1.4;font-weight:700}
