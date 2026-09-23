@@ -485,3 +485,26 @@ body.modal-open{overflow:hidden}
 .slideshow-town{background:#102b30}
 .slideshow-slide.slideshow-town img{object-fit:scale-down;object-position:center}
 .slideshow-town figcaption{position:absolute;left:16px;bottom:30px;max-width:calc(100% - 32px);padding:8px 14px;border-radius:8px;background:rgba(0,0,0,.78);color:#fff;font-size:clamp(12px,1.3vw,18px);line-height:1.4;font-weight:700}
+
+/* Mobile header sizing and content-driven hero height. */
+@media(max-width:768px){
+  body.mobile-nav-scrolled .nav.sticky .logo.logo-wide{
+    --logo-width:185px;
+    width:185px;
+    flex:0 0 185px;
+  }
+  body.mobile-nav-scrolled .nav.sticky .logo.logo-wide img{
+    height:64px;
+    max-height:64px;
+  }
+  .hero-img > img{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+  }
+  .hero-img .hero-overlay{
+    position:relative;
+    inset:auto;
+  }
+}
