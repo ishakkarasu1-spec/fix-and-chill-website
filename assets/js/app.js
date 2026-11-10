@@ -67,9 +67,34 @@ function updateMobileScrolledNav(){
 }
 updateMobileScrolledNav();
 window.addEventListener('scroll', updateMobileScrolledNav, {passive:true});
-mobileScrollQuery.addEventListener('change', updateMobileScrolledNav);
+if(mobileScrollQuery.addEventListener){
+  mobileScrollQuery.addEventListener('change', updateMobileScrolledNav);
+}else if(mobileScrollQuery.addListener){
+  mobileScrollQuery.addListener(updateMobileScrolledNav);
+}
 
 const siteModals = Array.from(document.querySelectorAll('.site-modal'));
+let chatHiddenForModal = false;
+function syncModalChat(){
+  const api = window.Tawk_API;
+  if(!api) return;
+  if(document.querySelector('.site-modal.is-open')){
+    if(typeof api.hideWidget === 'function'){
+      chatHiddenForModal = true;
+      api.hideWidget();
+    }
+  }else if(chatHiddenForModal && typeof api.showWidget === 'function'){
+    chatHiddenForModal = false;
+    api.showWidget();
+  }
+}
+window.Tawk_API = window.Tawk_API || {};
+const previousChatOnLoad = window.Tawk_API.onLoad;
+window.Tawk_API.onLoad = function(){
+  if(typeof previousChatOnLoad === 'function') previousChatOnLoad.apply(this, arguments);
+  syncModalChat();
+};
+
 function openModalById(id){
   const modal = document.getElementById(id);
   if(!modal) return false;
@@ -80,6 +105,12 @@ function openModalById(id){
   modal.classList.add('is-open');
   modal.setAttribute('aria-hidden', 'false');
   document.body.classList.add('modal-open');
+  const panel = modal.querySelector('.site-modal-panel');
+  if(panel) panel.scrollTop = 0;
+  modal.querySelectorAll('iframe[data-tally-src]').forEach(function(frame){
+    if(!frame.getAttribute('src')) frame.src = frame.getAttribute('data-tally-src');
+  });
+  syncModalChat();
   setTimeout(function(){
     if(window.Tally && typeof window.Tally.loadEmbeds === 'function'){
       window.Tally.loadEmbeds();
@@ -96,6 +127,7 @@ function closeModal(modal){
   modal.setAttribute('aria-hidden', 'true');
   if(!document.querySelector('.site-modal.is-open')){
     document.body.classList.remove('modal-open');
+    syncModalChat();
   }
 }
 

@@ -508,3 +508,9 @@ body.modal-open{overflow:hidden}
     inset:auto;
   }
 }
+/* Keep booking forms scrollable on touch screens and clear of floating controls. */
+body.modal-open .fab{display:none}
+.site-modal-panel{overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y}
+@media(max-width:767px){
+  .site-modal-panel{max-height:calc(100dvh - 24px);margin:12px auto}
+}
