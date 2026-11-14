@@ -1,0 +1,17 @@
+#welcome-popup{font-family:Arial,sans-serif}#welcome-popup *{box-sizing:border-box}
+
+#welcome-popup{border:0;padding:0;width:min(460px,calc(100% - 32px));max-height:calc(100dvh - 32px);overflow:auto;border-radius:24px;color:#153d43;box-shadow:0 30px 100px #06252c55}#welcome-popup::backdrop{background:#102c3bb3;backdrop-filter:blur(4px)}#welcome-popup .content{padding:36px 32px 24px;text-align:center;position:relative}#welcome-popup .close{position:absolute;top:12px;right:12px;width:34px;height:34px;border:0;background:#eef3f4;color:#39595e;border-radius:50%;font-size:24px}#welcome-popup .logo{width:210px;max-width:75%;height:auto;margin:4px 0 30px}#welcome-popup .eyebrow{font-size:10px;letter-spacing:2.3px;font-weight:700;color:#59787c;margin:0 0 12px}#welcome-popup h2{font-size:clamp(29px,7vw,39px);line-height:1.05;letter-spacing:-1.4px;margin:0 0 18px}#welcome-popup .description{font-size:17px;line-height:1.6;color:#60757a;margin:0 auto 24px;max-width:320px}#welcome-popup .trust{background:#edf5f4;border-radius:12px;padding:15px 18px;font-size:13px;line-height:1.5;margin-bottom:24px;font-weight:600}#welcome-popup .cta{display:block;background:#efb323;color:#172c31;text-decoration:none;font-size:17px;font-weight:700;padding:17px;border-radius:12px}#welcome-popup .cta:hover{background:#ffd165}#welcome-popup .note{font-size:11px;color:#74888c;margin:15px 0 0}#welcome-popup .progress{height:4px;background:#e9f0f0}#welcome-popup .bar{height:100%;background:#efb323;width:100%}#welcome-popup button:focus-visible,#welcome-popup a:focus-visible{outline:3px solid #0b828c;outline-offset:3px}@media(max-width:380px){#welcome-popup .content{padding:30px 20px 20px}#welcome-popup .logo{margin-bottom:22px}}
+
+/* Warm colors and a compact card on both phone and laptop. */
+#welcome-popup{background:linear-gradient(145deg,#fff4dc 0%,#ffecd1 55%,#e5f2ec 100%);width:min(460px,calc(100% - 32px))}
+#welcome-popup .logo{background:white;padding:8px;border-radius:12px;width:220px;margin-bottom:26px}
+#welcome-popup .trust{background:#20545a;color:#fff;letter-spacing:1.6px;font-size:14px;padding:18px 16px;line-height:1.7}
+#welcome-popup .cta{background:#f5b52a}
+@media(max-width:600px){
+ #welcome-popup .content{padding:28px 22px 20px}
+ #welcome-popup .logo{width:180px;margin-bottom:20px}
+ #welcome-popup h2{font-size:32px}
+ #welcome-popup .description{font-size:16px;margin-bottom:20px}
+ #welcome-popup .trust{font-size:12px;letter-spacing:1.3px;margin-bottom:20px}
+}
+@media(max-height:600px){#welcome-popup .content{padding:20px}#welcome-popup .logo{width:150px;margin-bottom:12px}#welcome-popup h2{font-size:28px;margin-bottom:10px}#welcome-popup .description{margin-bottom:12px}#welcome-popup .trust{padding:10px;margin-bottom:12px}#welcome-popup .note{margin-top:10px}}
