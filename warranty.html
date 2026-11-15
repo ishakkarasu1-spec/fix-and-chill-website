@@ -1,6 +1,21 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
+<script>
+// Owner test mode: ?internal=1 enables it; ?internal=0 restores normal measurement.
+(function(){
+  var internal = !/^(www\.)?fixandchillphonerepair\.com$/.test(location.hostname);
+  try {
+    var flag = new URLSearchParams(location.search).get('internal');
+    if(flag === '1') localStorage.setItem('fixchill-internal','1');
+    if(flag === '0') localStorage.removeItem('fixchill-internal');
+    internal = internal || localStorage.getItem('fixchill-internal') === '1';
+  } catch(e) {}
+  window.fixchillInternal = internal;
+  if(internal) window['ga-disable-G-C0GRLGBX91'] = true;
+})();
+</script>
+
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-C0GRLGBX91"></script>
 <script>
@@ -26,8 +41,8 @@
   <meta property="og:url" content="https://fixandchillphonerepair.com/warranty.html">
   <meta property="og:image" content="https://fixandchillphonerepair.com/assets/img/fixchill-logo.png">
   <link rel="icon" href="assets/img/fixchill-logo.png">
-  <link rel="stylesheet" href="assets/css/style.css?v=20260726-logo-fit">
-  <script defer src="assets/js/app.js?v=20260521-modal-ux"></script>
+  <link rel="stylesheet" href="assets/css/style.css?v=20261114-improvements">
+  <script defer src="assets/js/app.js?v=20261114-improvements"></script>
   <script type="application/ld+json">
   {
   "@context": "https://schema.org",
@@ -67,22 +82,24 @@
   <!-- Google Analytics -->
   <!-- Microsoft Clarity -->
   <script>
-    (function(c,l,a,r,i,t,y){
+    (function(c,l,a,r,i,t,y){if(window.fixchillInternal)return;
       c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
       t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
       y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
     })(window, document, "clarity", "script", "wr01neya2x");
-  </script></head>
+  </script><link rel="stylesheet" href="/assets/css/improvements.css?v=20261114">
+<script defer src="/assets/js/improvements.js?v=20261114"></script>
+</head>
 <body>
 <header class="container nav">
-  <a class="logo logo-wide" href="index.html"><img src="assets/img/fixchill-logo.png" alt="Fix&Chill mobile phone repair logo"></a>
+  <a class="logo logo-wide" href="/"><img src="assets/img/fixchill-logo.png" alt="Fix&Chill mobile phone repair logo" width="1741" height="619"></a>
   <span class="logo-service-line nav-service-line">Serving Eastern Shore for over 11 years.</span>
   <nav>
     <a href="sell.html" target="_blank" rel="noopener noreferrer">Sell Device</a>
     <a href="repairs.html" target="_blank" rel="noopener noreferrer">Repairs</a>
     <a href="accessories.html" target="_blank" rel="noopener noreferrer">Accessories</a>
-    <a href="index.html#onsite" target="_blank" rel="noopener noreferrer">On-Site Repair</a>
-    <a href="index.html#about" target="_blank" rel="noopener noreferrer">About Us</a>
+    <a href="/#onsite" target="_blank" rel="noopener noreferrer">On-Site Repair</a>
+    <a href="/#about" target="_blank" rel="noopener noreferrer">About Us</a>
     <a href="warranty.html" target="_blank" rel="noopener noreferrer">Warranty</a>
     <div class="nav-contact">
       <a href="contact.html" class="btn" target="_blank" rel="noopener noreferrer">Contact</a>
@@ -90,7 +107,7 @@
         <a class="social-link facebook" href="https://www.facebook.com/share/15hH6Arcbn8/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" aria-label="Fix&Chill Facebook page"><span>f</span></a>
         <a class="social-link instagram" href="https://www.instagram.com/fixandchill2?igsh=czBoOG51YjZkeXlr&amp;utm_source=qr" target="_blank" rel="noopener noreferrer" aria-label="Fix&Chill Instagram page"><span>IG</span></a>
         <a class="social-link tiktok" href="https://www.tiktok.com/@fixchillrehobothbeach?_r=1&amp;_t=ZP-968byyi4zZG" target="_blank" rel="noopener noreferrer" aria-label="Fix&Chill TikTok page"><span>TT</span></a>
-        <a class="social-link youtube" href="https://youtube.com/@fixandchillrehoboth?si=Y4QC3N38l9z2fQoQ" target="_blank" rel="noopener noreferrer" aria-label="Fix&Chill YouTube channel"><span>?</span></a>
+        <a class="social-link youtube" href="https://youtube.com/@fixandchillrehoboth?si=Y4QC3N38l9z2fQoQ" target="_blank" rel="noopener noreferrer" aria-label="Fix&Chill YouTube channel"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><rect x="2" y="5" width="20" height="14" rx="4" fill="white"/><path d="M10 8.5 16 12 10 15.5Z" fill="#e00000"/></svg></a>
       </div>
     </div>
   </nav>
@@ -116,17 +133,12 @@
     <a href="tel:+13027273842">(302) 727-3842</a><br>
     <a href="mailto:fixandchill1@gmail.com">fixandchill1@gmail.com</a>
   </address>
-    <p class="footer-service-areas"><strong><a href="index.html#service-areas">Service Areas:</a></strong> Mobile phone repair service areas: <a href="/rehoboth-beach-phone-repair">Rehoboth Beach</a>, <a href="/lewes-phone-repair">Lewes</a>, <a href="/georgetown-phone-repair">Georgetown</a>, <a href="/milford-phone-repair">Milford</a>, <a href="/milton-phone-repair">Milton</a>, <a href="/millsboro-phone-repair">Millsboro</a>, Dagsboro, Frankford, Selbyville, Bethany Beach, Fenwick Island, Seaford, Laurel, Ocean View, <a href="/ocean-city-phone-repair">Ocean City</a>, Berlin, Ocean Pines, <a href="/salisbury-phone-repair">Salisbury</a>, Pittsville.</p><p>&copy; Fix&Chill - Same-day phone repair & device buyback in Rehoboth Beach & Eastern Shore.</p>
+    <p class="footer-service-areas"><strong><a href="/#service-areas">Service Areas:</a></strong> Mobile phone repair service areas: <a href="/rehoboth-beach-phone-repair/">Rehoboth Beach</a>, <a href="/lewes-phone-repair/">Lewes</a>, <a href="/georgetown-phone-repair/">Georgetown</a>, <a href="/milford-phone-repair/">Milford</a>, <a href="/milton-phone-repair/">Milton</a>, <a href="/millsboro-phone-repair/">Millsboro</a>, Dagsboro, Frankford, Selbyville, Bethany Beach, Fenwick Island, Seaford, Laurel, Ocean View, <a href="/ocean-city-phone-repair/">Ocean City</a>, Berlin, Ocean Pines, <a href="/salisbury-phone-repair/">Salisbury</a>, Pittsville.</p><p>&copy; Fix&Chill - Same-day phone repair & device buyback in Rehoboth Beach & Eastern Shore.</p>
 </footer>
 <!--Start of Tawk.to Script-->
 <script type="text/javascript">
 var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
-Tawk_API.customStyle = {
-  visibility: {
-    desktop: {position: 'br', xOffset: 12, yOffset: 12},
-    mobile: {position: 'br', xOffset: 10, yOffset: 10}
-  }
-};
+
 (function(){
 var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
 s1.async=true;

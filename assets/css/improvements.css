@@ -1,0 +1,100 @@
+/* Shared mobile experience and focused repair landing section. */
+:root { --repair-ink:#143b40; }
+.repair-intro { display:grid; grid-template-columns:1.2fr 1fr; gap:36px; align-items:center; padding:44px 24px; }
+.intro-eyebrow { color:#286d70; font-size:13px; font-weight:800; letter-spacing:.12em; }
+.repair-intro h1 { color:var(--repair-ink); font-size:clamp(36px,5vw,64px); line-height:1.08; letter-spacing:-.035em; margin:16px 0; }
+.repair-intro h1 span { color:#08737a; }
+.intro-description { font-size:19px; max-width:560px; }
+.repair-intro .hero-cta { justify-content:flex-start; }
+.repair-intro .hero-cta a[href^="tel"] { display:inline-block!important; }
+.intro-note { font-size:14px; color:#52616a; }
+.intro-proof { display:flex; flex-wrap:wrap; gap:10px 18px; margin-top:22px; font-size:14px; }
+.intro-proof a,.intro-regions a { color:#12616a; text-underline-offset:3px; }
+.repair-intro-photo { background:#173e43; border-radius:24px; overflow:hidden; }
+.repair-intro-photo img { width:100%; height:350px; object-fit:cover; }
+.repair-intro-photo p { color:white; text-align:center; padding:0 12px; font-size:14px; }
+.repair-steps { padding:24px; }
+.repair-steps h2 { color:var(--repair-ink); }
+.steps-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+.steps-grid article { padding:22px; background:white; border:1px solid #dce6e7; border-radius:16px; }
+.steps-grid article>span { font-weight:800; color:#08737a; }
+.steps-grid h3 { margin:8px 0; }
+.intro-regions { padding:16px 0; }
+.form-alternative { padding:12px; font-size:14px; color:#344450; text-align:center; }
+.form-alternative a { color:#12616a; }
+.site-modal-panel { overscroll-behavior:contain; }
+.site-modal-panel:focus { outline:none; }
+a:focus-visible,button:focus-visible,summary:focus-visible { outline:3px solid #116e80; outline-offset:4px; }
+.nav-menu-toggle { display:none; }
+.fab-wa { background:#f3b340!important; color:#152b30!important; font-size:15px!important; }
+@media (max-width:1024px) {
+  body { padding-bottom:80px; }
+  .nav.container,.nav.container.sticky,body.mobile-nav-scrolled .nav.container.sticky { display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; min-height:72px; padding:8px 16px; overflow:visible; }
+  .nav .logo.logo-wide,body.mobile-nav-scrolled .nav.sticky .logo.logo-wide { width:170px; --logo-width:170px; margin:0; flex:0 0 170px; order:0; }
+  .nav .logo.logo-wide img,body.mobile-nav-scrolled .nav.sticky .logo.logo-wide img { height:54px!important; max-height:54px!important; }
+  .nav .nav-service-line { display:none!important; }
+  .nav-menu-toggle { display:block; min-height:44px; padding:8px 16px; border:1px solid #b8ced0; border-radius:10px; background:white; color:#143b40; font:inherit; }
+  .nav.has-menu nav,body.mobile-nav-scrolled .nav.sticky.has-menu nav { display:none; }
+  .nav.has-menu.menu-open nav,body.mobile-nav-scrolled .nav.sticky.has-menu.menu-open nav { display:flex; flex-basis:100%; flex-wrap:wrap; justify-content:flex-start; gap:6px; opacity:1; max-height:60vh; overflow:auto; visibility:visible; transform:none; }
+  .nav nav a { margin:0; padding:10px; font-size:15px; min-height:44px; }
+  .nav nav .nav-contact { margin:0; }
+  .topbar { position:static; flex-wrap:wrap; padding:8px 12px; font-size:13px; }
+  .repair-intro { gap:20px; padding:28px 20px; }
+  .repair-intro-photo img { height:290px; }
+  .fab.fab-call,.fab.fab-wa { position:fixed; bottom:calc(12px + env(safe-area-inset-bottom)); width:calc(50% - 20px); height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; z-index:100; font-size:16px!important; }
+  .fab.fab-call { left:12px; right:auto; }
+  .fab.fab-wa { right:12px; left:auto; }
+  body.modal-open .fab { display:none; }
+  section[id],details[id],a[id] { scroll-margin-top:90px; }
+}
+@media(max-width:650px) {
+  .repair-intro { grid-template-columns:1fr; }
+  .repair-intro h1 { font-size:42px; }
+  .intro-description { font-size:17px; }
+  .repair-intro .hero-cta { display:grid; grid-template-columns:1fr; }
+  .repair-intro .hero-cta .btn { text-align:center; }
+  .repair-intro-photo img { height:230px; }
+  .steps-grid { grid-template-columns:1fr; }
+  .repair-steps { padding:20px; }
+}
+@media(prefers-reduced-motion:reduce) { html { scroll-behavior:auto!important; } *,*::before,*::after { animation-duration:.01ms!important; transition-duration:.01ms!important; } }
+
+/* Compact introduction below the original slideshow; existing categories retained. */
+.home-refined .repair-intro { padding:28px; margin-top:20px; margin-bottom:32px; gap:30px; background:white; border:1px solid #d3e2e2; border-radius:22px; grid-template-columns:1.25fr 1fr; }
+.home-refined .repair-intro h1 { font-size:clamp(28px,3vw,40px); line-height:1.15; margin:14px 0; }
+.home-refined .intro-description { font-size:17px; line-height:1.6; margin:12px 0 18px; }
+.intro-experience { display:inline-flex; align-items:center; gap:14px; padding:10px 16px; margin:0; background:#f2b51e; color:#173e43; border-radius:10px; }
+.intro-experience strong { font-size:25px; line-height:1.1; white-space:nowrap; }
+.intro-experience span { font-size:13px; font-weight:700; }
+.home-refined .repair-intro-photo img { height:280px; display:block; }
+.home-refined .repair-intro-photo p { margin:10px 0; }
+.home-refined .hero-cta { gap:9px; margin:12px 0; flex-wrap:wrap; }
+.home-refined .hero-cta .btn { padding:12px 18px; font-size:15px; }
+.home-refined .intro-sell { background:#edf5f4; color:#194f53; border:1px solid #bbd4d3; }
+.home-refined .intro-note { font-size:12px; margin:12px 0 0; }
+.home-refined .intro-note a { color:#286d70; }
+.home-refined :is(#buyback,#repairs,#laptops,#accessories,#onsite,#about,#warranty,#brands,#service-areas,#reviews) { border:1px solid #ccdddd; border-top:5px solid #34777a; border-radius:20px; background:#fff; padding:28px; margin-top:28px; margin-bottom:28px; box-shadow:0 8px 24px #183f4508; }
+.home-refined :is(#buyback,#accessories,#about,#brands,#reviews) { border-top-color:#e8ad22; background:#fffcf5; }
+.home-refined :is(#buyback,#repairs,#laptops,#accessories,#onsite,#about,#warranty,#service-areas,#reviews) h2 { color:#183f45; margin-top:0; }
+.home-refined .nav.sticky { background:#edf2f6; }
+.home-refined .nav nav>a { display:inline-flex; align-items:center; justify-content:center; margin:0; padding:9px 11px; border:1px solid #c4d9d9; border-radius:9px; background:#e0eeee; color:#19464b; font-weight:600; transition:background .18s,transform .18s,box-shadow .18s; }
+.home-refined .nav nav>a:first-child { background:#f8d77a; border-color:#efc757; }
+.home-refined .nav nav>a:hover { background:#bfdcda; transform:translateY(-2px); box-shadow:0 4px 10px #173e431a; }
+@media(min-width:1025px) { .home-refined .nav { gap:18px; } .home-refined .nav nav { gap:6px; } .home-refined .nav nav>a { font-size:14px; padding:9px 8px; } }
+@media(max-width:650px) {
+ .home-refined .repair-intro { grid-template-columns:1fr; padding:20px; gap:18px; }
+ .home-refined .repair-intro h1 { font-size:29px; }
+ .home-refined .repair-intro-photo img { height:210px; }
+ .home-refined .hero-cta { grid-template-columns:1fr 1fr; }
+ .home-refined .hero-cta .intro-sell { grid-column:1/-1; }
+ .intro-experience { gap:10px; padding:10px 12px; }
+ .intro-experience strong { font-size:23px; }
+ .home-refined :is(#buyback,#repairs,#laptops,#accessories,#onsite,#about,#warranty,#brands,#service-areas,#reviews) { padding:20px; }
+}
+
+/* Reversible homepage switch: remove laptops-hidden from body to restore. */
+.home-refined.laptops-hidden #laptops,
+.home-refined.laptops-hidden .nav nav>a[href="#laptops"] { display:none!important; }
+.intro-experience .experience-message { font-size:17px; line-height:1.4; }
+.intro-experience .experience-message strong { font-size:inherit; }
+.social-link.youtube svg { display:block; width:65%; height:65%; flex-shrink:0; }

@@ -102,7 +102,9 @@ function openModalById(id){
     otherModal.classList.remove('is-open');
     otherModal.setAttribute('aria-hidden', 'true');
   });
+  modal._returnFocus = document.activeElement;
   modal.classList.add('is-open');
+  document.dispatchEvent(new CustomEvent('fixchill:modal-open', {detail:{id:id}}));
   modal.setAttribute('aria-hidden', 'false');
   document.body.classList.add('modal-open');
   const panel = modal.querySelector('.site-modal-panel');
@@ -124,6 +126,7 @@ function openModalById(id){
 function closeModal(modal){
   if(!modal) return;
   modal.classList.remove('is-open');
+  if(modal._returnFocus && modal._returnFocus.isConnected) modal._returnFocus.focus();
   modal.setAttribute('aria-hidden', 'true');
   if(!document.querySelector('.site-modal.is-open')){
     document.body.classList.remove('modal-open');
@@ -163,7 +166,10 @@ if(serviceAreaSearch){
     '/milton-phone-repair',
     '/millsboro-phone-repair',
     '/ocean-city-phone-repair',
-    '/salisbury-phone-repair'
+    '/salisbury-phone-repair',
+    '/bethany-beach-phone-repair',
+    '/ocean-view-phone-repair',
+    '/long-neck-phone-repair'
   ]);
 
   function goToBookRepair(){
