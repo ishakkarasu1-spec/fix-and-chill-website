@@ -169,7 +169,13 @@ if(serviceAreaSearch){
     '/salisbury-phone-repair',
     '/bethany-beach-phone-repair',
     '/ocean-view-phone-repair',
-    '/long-neck-phone-repair'
+    '/long-neck-phone-repair',
+    '/selbyville-phone-repair',
+    '/frankford-phone-repair',
+    '/fenwick-island-phone-repair',
+    '/bishopville-phone-repair',
+    '/millville-phone-repair',
+    '/ocean-pines-phone-repair'
   ]);
 
   function goToBookRepair(){
