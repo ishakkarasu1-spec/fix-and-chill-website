@@ -61,7 +61,7 @@
     else if(!e.shiftKey && document.activeElement===last){e.preventDefault();first.focus();}
   });
   window.Tawk_API = window.Tawk_API || {};
-  window.Tawk_API.customStyle={visibility:{desktop:{position:'bl',xOffset:16,yOffset:20},mobile:{position:'bl',xOffset:12,yOffset:88}}};
+  window.Tawk_API.customStyle={visibility:{desktop:{position:'bl',xOffset:16,yOffset:20},mobile:{position:'bl',xOffset:12,yOffset:140}}};
   if(document.body && document.body.classList.contains('book-page')) {
     const previousLoad=window.Tawk_API.onLoad;
     window.Tawk_API.onLoad=function(){

@@ -98,3 +98,8 @@ a:focus-visible,button:focus-visible,summary:focus-visible { outline:3px solid #
 .intro-experience .experience-message { font-size:17px; line-height:1.4; }
 .intro-experience .experience-message strong { font-size:inherit; }
 .social-link.youtube svg { display:block; width:65%; height:65%; flex-shrink:0; }
+
+/* Make availability readable and the same-day offer prominent on small screens. */
+.home-refined .same-day-highlight { background:#e6f3ed; border-left:5px solid #26715d; border-radius:10px; padding:14px 16px; color:#143f35; font-size:18px; line-height:1.45; margin:18px 0 10px; }
+.home-refined .intro-note { font-size:15px; line-height:1.6; color:#344b51; }
+.old-location { margin-top:10px; }
