@@ -104,8 +104,18 @@ a:focus-visible,button:focus-visible,summary:focus-visible { outline:3px solid #
 .home-refined .intro-note { font-size:15px; line-height:1.6; color:#344b51; }
 .old-location { margin-top:10px; }
 
-/* Compact mobile actions: half the former width, 30% less visual height. */
+/* Circular actions: chat stays left; Book aligns with its bottom edge on the right. */
+.fab.fab-call,.fab.fab-wa {
+ left:auto; right:16px; width:56px; height:56px; min-height:56px;
+ padding:0; border-radius:50%; box-sizing:border-box;
+ display:flex; align-items:center; justify-content:center;
+ font-size:14px!important; line-height:1; z-index:100;
+}
+.fab.fab-wa { bottom:20px; }
+.fab.fab-call { bottom:88px; }
+.fab.fab-call::before,.fab.fab-wa::before { content:none; }
 @media(max-width:1024px) {
- .fab.fab-call,.fab.fab-wa { width:calc(25% - 10px); height:34px; min-height:0; padding:0; border-radius:9px; font-size:12px!important; line-height:1; box-sizing:border-box; }
- .fab.fab-call::before,.fab.fab-wa::before { content:""; position:absolute; inset:-5px 0; }
+ .fab.fab-call,.fab.fab-wa { left:auto; right:12px; width:56px; height:56px; min-height:56px; border-radius:50%; }
+ .fab.fab-wa { bottom:20px; }
+ .fab.fab-call { bottom:88px; }
 }
