@@ -29,7 +29,6 @@
   }
   function pauseLabel(){const es=document.documentElement.lang==='es';pause.textContent = paused ? '▶' : 'Ⅱ';pause.setAttribute('aria-label',paused ? (es?'Reproducir diapositivas':'Play slideshow') : (es?'Pausar diapositivas':'Pause slideshow'));pause.setAttribute('aria-pressed',String(paused));}
   document.addEventListener('fixchill:language',pauseLabel);
-  document.querySelectorAll('a[href="#brands"]').forEach(a=>a.addEventListener('click',()=>{document.querySelector('#brands').open=true;}));
   pause.addEventListener('click',() => {paused = !paused; pauseLabel();});
   carousel.querySelectorAll('[data-slide]').forEach(b => b.addEventListener('click',() => {show(current + (b.dataset.slide === 'next' ? 1 : -1));paused=true;pauseLabel();}));
   setInterval(() => {if (!paused && !document.hidden && !carousel.matches(':hover') && !carousel.contains(document.activeElement)) show(current+1);},6000);

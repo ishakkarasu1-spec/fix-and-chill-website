@@ -88,3 +88,51 @@ body.home-refined.home-refresh .footer-cols{padding-bottom:100px}
  body.home-refined.home-refresh .hero-actions .btn{display:flex;align-items:center;justify-content:center;min-height:48px}
  body.home-refined.home-refresh .service-announcement{padding:12px;line-height:1.5}
 }
+
+/* Four compact repair cards; paired petals on small screens. */
+.home-services .service-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.home-services .repair-service{padding:24px;min-width:0}
+.home-services .repair-service h3{font-size:19px;margin:18px 0 10px}
+.home-services .repair-service p{font-size:14px;line-height:1.5;margin-bottom:20px}
+@media(max-width:1024px){
+ .home-services .service-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:700px){
+ .home-services{padding:30px 0}
+ .home-services .service-grid{gap:12px}
+ .home-services .repair-service{padding:18px 13px;text-align:center;align-items:center}
+ .home-services .repair-service:nth-child(1){border-radius:38px 38px 14px 38px}
+ .home-services .repair-service:nth-child(2){border-radius:38px 38px 38px 14px}
+ .home-services .repair-service:nth-child(3){border-radius:38px 14px 38px 38px}
+ .home-services .repair-service:nth-child(4){border-radius:14px 38px 38px 38px}
+ .home-services .service-icon{width:44px;height:44px;border-radius:14px}
+ .home-services .repair-service h3{font-size:16px;line-height:1.3;margin:12px 0 8px;overflow-wrap:anywhere}
+ .home-services .repair-service p{font-size:13px;line-height:1.4;margin-bottom:14px}
+ .home-services .service-link{font-size:13px}
+}
+
+/* Keep the mobile-service promise close to the headline, with quieter emphasis. */
+.home-refresh .hero-mobile-promise{display:table;max-width:100%;box-sizing:border-box;margin:12px 0 20px;padding:12px 20px;border-radius:12px;background:#2d7770;color:#fff;font-size:clamp(19px,2.05vw,30px);line-height:1.2;font-weight:800;letter-spacing:.5px;text-transform:uppercase}
+@media(max-width:1024px){.home-refresh .hero-mobile-promise{font-size:21px}}
+@media(max-width:700px){.home-refresh .hero-mobile-promise{font-size:21.5px;margin:10px 0 16px;padding:11px 16px}}
+
+/* November 20: compact services and visible mobile language controls. */
+.home-refresh .hero-mobile-promise{margin:0 auto 20px;font-size:clamp(26px,2.4vw,34px);text-align:center;padding:13px 24px}
+.home-services .repair-service{padding:20px}
+.home-services .repair-service h3{margin-top:12px;font-size:17px}
+.home-services .repair-service p{margin-bottom:14px}
+@media(min-width:820px){.home-services .service-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:819px){
+ body.home-refined.home-refresh header.nav.sticky{gap:8px}
+ body.home-refined.home-refresh header.nav .logo.logo-wide{width:110px;flex:0 1 110px;margin-right:auto}
+ body.home-refined.home-refresh header.nav .logo img{width:100%;height:auto}
+ body.home-refined.home-refresh header.nav>.language-switch{display:flex;margin:0;flex-shrink:0}
+ body.home-refined.home-refresh header.nav>.language-switch button{font-size:12px;padding:6px 8px;min-height:36px}
+ body.home-refined.home-refresh header.nav .nav-menu-toggle{margin:0;padding:8px 10px;min-height:40px;font-size:13px}
+ .home-services .service-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ .home-services .repair-service{padding:16px 12px}
+ .home-services .repair-service h3{font-size:16px}
+ .home-services .repair-service p{display:none}
+ .home-services .service-link{margin-top:10px;font-size:13px}
+ .home-refresh .hero-mobile-promise{font-size:26px;margin:0 auto 18px;padding:12px 18px}
+}

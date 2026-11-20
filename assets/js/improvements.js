@@ -50,7 +50,18 @@
     button.addEventListener('click',()=>{const open=header.classList.toggle('menu-open');button.setAttribute('aria-expanded',String(open));});
     nav.addEventListener('click',e=>{if(e.target.closest('a')) close();});
     const desktop = window.matchMedia('(min-width:820px)');
-    if(document.body.classList.contains('home-refresh')) desktop.addEventListener('change',close);
+    if(document.body.classList.contains('home-refresh')) {
+      const languages=nav.querySelector('.language-switch');
+      const marker=document.createComment('language position');
+      if(languages) languages.before(marker);
+      function layout(){close();if(languages){if(desktop.matches)marker.after(languages);else header.insertBefore(languages,button);}}
+      layout();desktop.addEventListener('change',layout);
+      let menuScrollY=window.scrollY;
+      button.addEventListener('click',()=>{menuScrollY=window.scrollY;});
+      window.addEventListener('scroll',()=>{
+        if(!desktop.matches && header.classList.contains('menu-open') && window.scrollY-menuScrollY>60)close();
+      },{passive:true});
+    }
     header.addEventListener('keydown',e=>{if(e.key==='Escape'){close();button.focus();}});
   });
   // A keyboard user can reach the embedded form and return to the opener.
