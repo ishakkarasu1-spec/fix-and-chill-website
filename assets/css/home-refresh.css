@@ -136,3 +136,18 @@ body.home-refined.home-refresh .footer-cols{padding-bottom:100px}
  .home-services .service-link{margin-top:10px;font-size:13px}
  .home-refresh .hero-mobile-promise{font-size:26px;margin:0 auto 18px;padding:12px 18px}
 }
+
+/* Genuine parts is the fifth service choice, with a wider mobile notice. */
+.home-services .genuine-parts-card{background:#eaf5f1;border-color:#b7d9ce}
+.home-services .genuine-parts-card .service-icon{background:#fff;color:#2d7770;font-size:26px}
+.home-services .genuine-parts-card p{display:block;font-size:13px;line-height:1.5}
+@media(min-width:820px){
+ .home-services .service-grid{grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+ .home-services .repair-service{padding:18px 14px}
+ .home-services .repair-service h3{font-size:16px;overflow-wrap:break-word}
+}
+@media(max-width:819px){
+ .home-services .genuine-parts-card{grid-column:1 / -1;border-radius:22px;padding:20px;text-align:left;align-items:flex-start}
+ .home-services .genuine-parts-card h3{margin-top:10px}
+ .home-services .genuine-parts-card p{margin-bottom:4px}
+}
