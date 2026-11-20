@@ -1,0 +1,1 @@
+window.FC_CLOUD = Object.freeze({"publishableKey": "sb_publishable_DhSxIH5NogwPzP-c0DJ5ig_rfobadke", "projectUrl": "https://gdrwicmpzyyvztkjhuwv.supabase.co"});

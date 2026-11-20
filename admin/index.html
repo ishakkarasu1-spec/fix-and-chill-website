@@ -8,6 +8,7 @@
   <link rel="icon" href="../assets/img/fixchill-logo-2026.png">
   <link rel="stylesheet" href="../assets/css/admin.css">
   <script defer src="../assets/js/repair-system.js"></script>
+  <script defer src="../assets/js/admin-backup.js"></script>
 </head>
 <body class="fc-admin-body">
   <main id="fc-login" class="fc-login">
@@ -47,7 +48,10 @@
       <div class="fc-topline">
         <h1>Fix & Chill Admin</h1>
         <div class="fc-actions">
+          <a href="../repair-cloud/">Online repair updates</a>
           <a href="../track-repair/" target="_blank" rel="noopener noreferrer">Open tracking page</a>
+          <button id="download-local-backup" class="fc-btn" type="button">Download local backup</button>
+          <span id="backup-status" role="status" aria-live="polite"></span>
           <button id="seed-workflow" class="fc-btn accent" type="button">Create Test Workflow</button>
         </div>
       </div>

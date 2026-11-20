@@ -126,7 +126,7 @@ function openModalById(id){
 function closeModal(modal){
   if(!modal) return;
   modal.classList.remove('is-open');
-  if(modal._returnFocus && modal._returnFocus.isConnected) modal._returnFocus.focus();
+  if(modal._returnFocus && modal._returnFocus.isConnected) modal._returnFocus.focus({preventScroll:true});
   modal.setAttribute('aria-hidden', 'true');
   if(!document.querySelector('.site-modal.is-open')){
     document.body.classList.remove('modal-open');
@@ -186,7 +186,9 @@ if(serviceAreaSearch){
 
   function normalizedPath(link){
     try{
-      return new URL(link.getAttribute('href'), window.location.origin).pathname.replace(/\/$/,'');
+      const url = new URL(link.getAttribute('href'), window.location.href);
+      const slug = url.pathname.replace(/\/index\.html$/, '').replace(/\/$/,'').split('/').pop();
+      return '/' + slug;
     }catch(e){
       return '';
     }

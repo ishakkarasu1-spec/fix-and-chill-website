@@ -1,7 +1,7 @@
 /* No customer answers, contact details or submission IDs are sent to analytics. */
 (() => {
   'use strict';
-  const forms = {rjJyop:'repair', yPoZDX:'buyback'};
+  const forms = {rjJyop:'repair', yPoZDX:'buyback', '5X9WKd':'quote'};
   const submitted = new Set();
   function track(name, extra = {}) {
     let internal = false;
@@ -21,7 +21,7 @@
     if (href.startsWith('https://tally.so/r/')) track('form_external_open', {form_type:forms[href.split('/').pop()] || 'unknown'});
   });
   document.addEventListener('fixchill:modal-open', e => {
-    track(e.detail.id === 'repair-modal' ? 'booking_open' : 'buyback_open');
+    track(e.detail.id === 'repair-modal' ? 'booking_open' : e.detail.id === 'quote-modal' ? 'quote_open' : 'buyback_open');
   });
   window.addEventListener('message', e => {
     // Only messages from an actual embedded Tally form are trusted.
@@ -49,6 +49,8 @@
     function close(){header.classList.remove('menu-open');button.setAttribute('aria-expanded','false');}
     button.addEventListener('click',()=>{const open=header.classList.toggle('menu-open');button.setAttribute('aria-expanded',String(open));});
     nav.addEventListener('click',e=>{if(e.target.closest('a')) close();});
+    const desktop = window.matchMedia('(min-width:820px)');
+    if(document.body.classList.contains('home-refresh')) desktop.addEventListener('change',close);
     header.addEventListener('keydown',e=>{if(e.key==='Escape'){close();button.focus();}});
   });
   // A keyboard user can reach the embedded form and return to the opener.
