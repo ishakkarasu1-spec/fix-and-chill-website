@@ -4,9 +4,7 @@ const $=s=>document.querySelector(s), cfg=window.FC_CLOUD;
 let requestId=0;
 async function lookup(){
  const id=++requestId;
- let token=$('#tracking-code').value.trim();
- if(/^https?:\/\//i.test(token)){try{token=new URLSearchParams(new URL(token).hash.slice(1)).get('token')||'';}catch(_){token='';}}
- token=token.toLowerCase();
+ const token=FC_FORMAT.token($('#tracking-code').value);
  $('#result').hidden=true;
  if(!/^[0-9a-f]{64}$/.test(token)){ $('#message').textContent='Enter the full tracking code from your private link.'; return; }
  $('#check').disabled=true; $('#message').textContent='Checking your repair…';
@@ -17,7 +15,7 @@ async function lookup(){
   const rows=await response.json();if(id!==requestId)return;
   if(!Array.isArray(rows)||!rows.length){$('#message').textContent='This tracking link is invalid, expired or no longer active. Please contact Fix & Chill.';return;}
   const r=rows[0];
-  $('#device').textContent=r.device; $('#repair-status').textContent=r.status;
+  const parts=FC_FORMAT.device(r.device);$('#device').textContent=parts.device;$('#repair-type').textContent=parts.repair?'Repair: '+parts.repair:'';$('#repair-type').hidden=!parts.repair; $('#repair-status').textContent=r.status;
   $('#ticket-number').textContent='Ticket: '+r.ticket_number;
   $('#estimate').textContent='Estimated completion: '+(r.estimated_completion||'We will confirm with you.');
   $('#public-message').textContent=r.public_message||'Please contact us if you have questions.';
@@ -27,6 +25,6 @@ async function lookup(){
  finally{clearTimeout(timer);if(id===requestId)$('#check').disabled=false;}
 }
 $('#tracking-form').addEventListener('submit',e=>{e.preventDefault();lookup();});
-const token=new URLSearchParams(location.hash.slice(1)).get('token');
+const token=FC_FORMAT.token(location.hash.slice(1));
 if(token){$('#tracking-code').value=token;history.replaceState(null,'',location.pathname);lookup();}
 })();
