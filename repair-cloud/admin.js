@@ -11,7 +11,7 @@ function updateEmail(){
  if(!valid){button.removeAttribute('href');return;}
  const subject='Fix & Chill - Repair '+linkTicket;
  const body='Hello,\n\nYou can track your Fix & Chill repair ('+linkTicket+') here:\n'+link+'\n\nTap the link to see your latest repair status. No sign-in is needed. Save this email and use the same link for updates.\n\nKeep this link private. Questions? Call (302) 727-3842.\nFix & Chill';
- button.href='mailto:'+encodeURIComponent(email)+'?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
+ const gmail=new URL('https://mail.google.com/mail/');gmail.search=new URLSearchParams({authuser:'fixandchill1@gmail.com',view:'cm',fs:'1',to:email,su:subject,body}).toString();button.href=gmail.href;
 }
 $('#recipient-email').addEventListener('input',updateEmail);
 function clear(){resetShare();form.reset();editing=null;sourceId=null;$('#editor-title').textContent='New repair record';$('#links').hidden=true;$('#tracking-link').value='';}
