@@ -2,10 +2,20 @@
 'use strict';
 const $=s=>document.querySelector(s),cfg=window.FC_CLOUD;
 const statuses=['Booked','Item Ordered','Item Received','Waiting for Part','Device Received','In Repair','Ready for Pickup','Repair Completed','Delivered','Cancelled','Refunded'];
-const form=$('#ticket-form');let accessToken='',rows=[],editing=null,sourceId=null,localTickets=[];
+const form=$('#ticket-form');let accessToken='',rows=[],editing=null,sourceId=null,localTickets=[],linkTicket='';
 function note(s){$('#notice').textContent=s;}
-function clear(){form.reset();editing=null;sourceId=null;$('#editor-title').textContent='New repair record';$('#links').hidden=true;$('#tracking-link').value='';}
-function lock(){accessToken='';rows=[];$('#tickets').replaceChildren();$('#workspace').hidden=true;$('#login').hidden=false;clear();}
+function resetShare(){linkTicket='';$('#recipient-email').value='';$('#email-customer').hidden=true;$('#email-customer').removeAttribute('href');$('#customer-code').value='';$('#customer-message').value='';}
+function updateEmail(){
+ const input=$('#recipient-email'),email=input.value.trim(),link=$('#tracking-link').value,button=$('#email-customer');
+ const valid=email&&input.checkValidity()&&!/[\r\n]/.test(email)&&link;button.hidden=!valid;
+ if(!valid){button.removeAttribute('href');return;}
+ const subject='Fix & Chill - Repair '+linkTicket;
+ const body='Hello,\n\nYou can track your Fix & Chill repair ('+linkTicket+') here:\n'+link+'\n\nTap the link to see your latest repair status. No sign-in is needed. Save this email and use the same link for updates.\n\nKeep this link private. Questions? Call (302) 727-3842.\nFix & Chill';
+ button.href='mailto:'+encodeURIComponent(email)+'?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
+}
+$('#recipient-email').addEventListener('input',updateEmail);
+function clear(){resetShare();form.reset();editing=null;sourceId=null;$('#editor-title').textContent='New repair record';$('#links').hidden=true;$('#tracking-link').value='';}
+function lock(){accessToken='';rows=[];$('#ticket-search').value='';$('#search-count').textContent='';$('#tickets').replaceChildren();$('#workspace').hidden=true;$('#login').hidden=false;clear();}
 async function api(path,method='GET',body,auth=true){
  const headers={apikey:cfg.publishableKey,'Content-Type':'application/json'};
  if(auth){if(!accessToken)throw Error('Please sign in.');headers.Authorization='Bearer '+accessToken;headers.Prefer='return=representation';}
@@ -24,24 +34,32 @@ $('#login-form').addEventListener('submit',e=>{e.preventDefault();busy(e.submitt
  try{const admins=await api('/rest/v1/fc_admins?select=user_id&user_id=eq.'+encodeURIComponent(result.user.id));if(!admins.length)throw Error('This account is not authorized to manage repairs.');await refresh();loadLocal();$('#login').hidden=true;$('#workspace').hidden=false;note('Signed in. Updates are saved online.');}catch(err){lock();throw err;}
  });});
 $('#logout').addEventListener('click',()=>{const token=accessToken;lock();note('Signed out of this page.');if(token)fetch(cfg.projectUrl+'/auth/v1/logout',{method:'POST',headers:{apikey:cfg.publishableKey,Authorization:'Bearer '+token}}).catch(()=>{});});
-function edit(r){clear();editing=r.id;sourceId=r.source_id;['ticket_number','device','status','estimated_completion','public_message'].forEach(k=>form.elements[k].value=r[k]||'');$('#editor-title').textContent='Edit '+r.ticket_number;form.scrollIntoView({behavior:'smooth'});}
+function edit(r){clear();editing=r.id;sourceId=r.source_id;['ticket_number','device','status','estimated_completion','public_message'].forEach(k=>form.elements[k].value=r[k]||'');['customer_name','customer_phone','customer_email'].forEach(k=>form.elements[k].value=r.private_data?.[k]||'');$('#editor-title').textContent='Edit '+r.ticket_number;form.scrollIntoView({behavior:'smooth'});}
 async function refresh(){
- rows=await api('/rest/v1/fc_repair_tickets?select=id,source_id,ticket_number,device,status,estimated_completion,public_message,tracking_enabled,tracking_expires_at,updated_at&order=updated_at.desc');
+ rows=await api('/rest/v1/fc_repair_tickets?select=id,source_id,ticket_number,device,status,estimated_completion,public_message,tracking_enabled,tracking_expires_at,updated_at,private_data&order=updated_at.desc');
+ renderTickets();
+}
+$('#ticket-search').addEventListener('input',renderTickets);
+function renderTickets(){
+ const query=$('#ticket-search').value.trim().toLocaleLowerCase(),digits=query.replace(/\D/g,'');
+ const matches=rows.filter(r=>{const d=r.private_data||{};return [r.ticket_number,r.device,d.customer_name,d.customer_email,d.customer_phone].some(v=>String(v||'').toLocaleLowerCase().includes(query))||(digits.length>=3&&/^[+()\d\s.-]+$/.test(query)&&String(d.customer_phone||'').replace(/\D/g,'').includes(digits));});
+ $('#search-count').textContent=matches.length+' of '+rows.length+' records';
  $('#tickets').replaceChildren();if(!rows.length){$('#tickets').textContent='No online records yet.';return;}
- rows.forEach(r=>{
- const card=document.createElement('article'),h=document.createElement('h3'),p=document.createElement('p');h.textContent=r.ticket_number+' — '+r.device;p.textContent=r.status+' · Tracking '+(r.tracking_enabled&&new Date(r.tracking_expires_at)>new Date()?'active':'inactive');card.append(h,p);
+ if(!matches.length){$('#tickets').textContent='No matching repair records.';return;}
+ matches.forEach(r=>{
+ const card=document.createElement('article'),h=document.createElement('h3'),p=document.createElement('p');h.textContent=[r.ticket_number,r.private_data?.customer_name||'Customer name not added',r.device].join(' — ');p.textContent=r.status+' · Tracking '+(r.tracking_enabled&&new Date(r.tracking_expires_at)>new Date()?'active':'inactive');card.append(h,p);const contact=document.createElement('p');contact.textContent=[r.private_data?.customer_phone,r.private_data?.customer_email].filter(Boolean).join(' | ');if(contact.textContent)card.append(contact);
  for(const [label,fn] of [['Edit',async()=>edit(r)],['Create / replace tracking link',async()=>{
   const token=Array.from(crypto.getRandomValues(new Uint8Array(32)),x=>x.toString(16).padStart(2,'0')).join('');
   const hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(token))),x=>x.toString(16).padStart(2,'0')).join('');
   const updated=await api('/rest/v1/fc_repair_tickets?id=eq.'+r.id,'PATCH',{tracking_token_hash:hash,tracking_enabled:true,tracking_expires_at:new Date(Date.now()+180*86400000).toISOString()});if(!updated.length)throw Error('Record was not updated. Refresh and retry.');
-  const link=new URL('https://fixandchillphonerepair.com/track-repair/index.html');link.hash='token='+token;$('#tracking-link').value=link.href;$('#customer-code').value=token;$('#customer-message').value='Fix & Chill — Repair '+r.ticket_number+'\nView your repair status: '+link.href+'\nKeep this link private. Questions? Call (302) 727-3842.';$('#links').hidden=false;note('Private tracking link created. Copy it for the customer; the previous link no longer works.');await refresh();$('#links').scrollIntoView({behavior:'smooth'});
- }],['Disable tracking',async()=>{const updated=await api('/rest/v1/fc_repair_tickets?id=eq.'+r.id,'PATCH',{tracking_enabled:false,tracking_token_hash:null});if(!updated.length)throw Error('Record was not updated.');$('#links').hidden=true;$('#tracking-link').value='';await refresh();note('Tracking disabled for '+r.ticket_number);} ]]){
+  const link=new URL('https://fixandchillphonerepair.com/track-repair/index.html');link.hash='token='+token;$('#tracking-link').value=link.href;$('#customer-code').value=token;$('#customer-message').value='Fix & Chill — Repair '+r.ticket_number+'\nView your repair status: '+link.href+'\nKeep this link private. Questions? Call (302) 727-3842.';linkTicket=r.ticket_number;$('#recipient-email').value=r.private_data?.customer_email||'';updateEmail();$('#links').hidden=false;note('Private tracking link created. Copy it for the customer; the previous link no longer works.');await refresh();$('#links').scrollIntoView({behavior:'smooth'});
+ }],['Disable tracking',async()=>{const updated=await api('/rest/v1/fc_repair_tickets?id=eq.'+r.id,'PATCH',{tracking_enabled:false,tracking_token_hash:null});if(!updated.length)throw Error('Record was not updated.');resetShare();$('#links').hidden=true;$('#tracking-link').value='';await refresh();note('Tracking disabled for '+r.ticket_number);} ]]){
  const b=document.createElement('button');b.textContent=label;b.className='secondary';b.addEventListener('click',()=>busy(b,fn));card.append(b);
  }$('#tickets').append(card);
  });
 }
 form.addEventListener('submit',e=>{e.preventDefault();busy(e.submitter,async()=>{
- const record=Object.fromEntries(['ticket_number','device','status','estimated_completion','public_message'].map(k=>[k,form.elements[k].value.trim()]));if(!record.ticket_number||!record.device)throw Error('Ticket number and device are required.');if(sourceId)record.source_id=sourceId;
+ const record=Object.fromEntries(['ticket_number','device','status','estimated_completion','public_message'].map(k=>[k,form.elements[k].value.trim()]));if(!record.ticket_number||!record.device)throw Error('Ticket number and device are required.');if(sourceId)record.source_id=sourceId;record.private_data={...(rows.find(r=>r.id===editing)?.private_data||{}),...Object.fromEntries(['customer_name','customer_phone','customer_email'].map(k=>[k,form.elements[k].value.trim()]))};
  const saved=await api('/rest/v1/fc_repair_tickets'+(editing?'?id=eq.'+editing:''),editing?'PATCH':'POST',record);if(!saved.length)throw Error('No record was saved. Refresh and try again.');editing=saved[0].id;$('#editor-title').textContent='Edit '+record.ticket_number;await refresh();note('Saved online. Customer tracking reflects these fields.');
  });});
 function loadLocal(){
